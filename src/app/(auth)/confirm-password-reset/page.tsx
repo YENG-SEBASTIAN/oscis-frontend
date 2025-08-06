@@ -50,6 +50,7 @@ export default function ResetConfirmPage() {
       toast.dismiss(toastId);
       router.push('/login');
     } catch (err: any) {
+      console.log(err)
       toast.dismiss(toastId);
     }
   };

@@ -10,12 +10,23 @@ import {
   getRefreshToken,
 } from '@/lib/auth';
 import { User } from '@/types/user';
+import { AxiosError } from 'axios';
 
 interface RegisterPayload {
   username: string;
   email: string;
   password: string;
   confirmPassword: string;
+}
+
+interface ErrorResponse {
+  detail?: string;
+  email?: string;
+  old_password?: string[];
+  new_password?: string[];
+  new_password2?: string[];
+  uidb64?: string;
+  token?: string;
 }
 
 interface AuthStore {
@@ -26,13 +37,11 @@ interface AuthStore {
   login: (email: string, password: string) => Promise<void>;
   register: (data: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
-
   changePassword: (
     oldPassword: string,
     newPassword: string,
     confirmNewPassword: string
   ) => Promise<void>;
-
   requestPasswordReset: (email: string) => Promise<void>;
   confirmPasswordReset: (
     uid: string,
@@ -40,7 +49,6 @@ interface AuthStore {
     newPassword: string,
     confirmNewPassword: string
   ) => Promise<void>;
-
   setUser: (user: User) => void;
   fetchUser: () => Promise<void>;
 }
@@ -50,12 +58,10 @@ export const useAuthStore = create<AuthStore>((set) => ({
   isAuthenticated: !!getAccessToken() && !!getStoredUser(),
   loading: false,
 
-
   setUser: (user: User) => {
     persistUser(user);
     set({ user, isAuthenticated: true });
   },
-
 
   fetchUser: async () => {
     try {
@@ -69,26 +75,23 @@ export const useAuthStore = create<AuthStore>((set) => ({
     }
   },
 
-
   login: async (email, password) => {
     set({ loading: true });
     try {
       const res = await api.post('/accounts/login/', { email, password });
       const { access, refresh, user } = res.data;
-
       setTokens(access, refresh);
       persistUser(user);
-
       set({ user, isAuthenticated: true });
       toast.success('Logged in successfully!');
-    } catch (err: any) {
-      toast.error(err.response?.data?.detail || 'Login failed');
+    } catch (err: unknown) {
+      const error = err as AxiosError<ErrorResponse>;
+      toast.error(error.response?.data?.detail || 'Login failed');
       throw err;
     } finally {
       set({ loading: false });
     }
   },
-
 
   register: async ({ username, email, password, confirmPassword }) => {
     set({ loading: true });
@@ -97,17 +100,17 @@ export const useAuthStore = create<AuthStore>((set) => ({
         username,
         email,
         password,
-        confirm_password: confirmPassword,
+        password2: confirmPassword,
       });
       toast.success('Registration successful. You can now log in.');
-    } catch (err: any) {
-      toast.error(err.response?.data?.detail || 'Registration failed');
+    } catch (err: unknown) {
+      const error = err as AxiosError<ErrorResponse>;
+      toast.error(error.response?.data?.detail || 'Registration failed');
       throw err;
     } finally {
       set({ loading: false });
     }
   },
-
 
   logout: async () => {
     try {
@@ -124,59 +127,44 @@ export const useAuthStore = create<AuthStore>((set) => ({
     }
   },
 
-
   changePassword: async (oldPassword, newPassword, confirmNewPassword) => {
     set({ loading: true });
-
     try {
       await api.post('/accounts/password/change/', {
         old_password: oldPassword,
         new_password: newPassword,
         new_password2: confirmNewPassword,
       });
-
       toast.success('Password changed successfully. Please log in again.');
-    } catch (err: any) {
-      const data = err.response?.data;
-
-      if (data) {
-        const errors = [
-          ...(data.old_password || []),
-          ...(data.new_password || []),
-          ...(data.new_password2 || []),
-          ...(typeof data.detail === 'string' ? [data.detail] : []),
-        ];
-
-        if (errors.length > 0) {
-          toast.error(errors.join(' '));
-        } else {
-          toast.error('Password change failed. Please check your input.');
-        }
-      } else {
-        toast.error('An unexpected error occurred.');
-      }
-
+    } catch (err: unknown) {
+      const error = err as AxiosError<ErrorResponse>;
+      const data = error.response?.data;
+      const errors = [
+        ...(data?.old_password || []),
+        ...(data?.new_password || []),
+        ...(data?.new_password2 || []),
+        ...(typeof data?.detail === 'string' ? [data.detail] : []),
+      ];
+      toast.error(errors.length > 0 ? errors.join(' ') : 'Password change failed.');
       throw err;
     } finally {
       set({ loading: false });
     }
   },
-
-
 
   requestPasswordReset: async (email) => {
     set({ loading: true });
     try {
       await api.post('/accounts/password/reset/', { email });
       toast.success('Password reset email sent! Check your inbox.');
-    } catch (err: any) {
-      toast.error(err.response?.data?.email || 'Reset request failed');
+    } catch (err: unknown) {
+      const error = err as AxiosError<ErrorResponse>;
+      toast.error(error.response?.data?.email || 'Reset request failed');
       throw err;
     } finally {
       set({ loading: false });
     }
   },
-
 
   confirmPasswordReset: async (uidb64, token, newPassword, confirmNewPassword) => {
     set({ loading: true });
@@ -188,9 +176,16 @@ export const useAuthStore = create<AuthStore>((set) => ({
         new_password2: confirmNewPassword,
       });
       toast.success('Password has been reset successfully');
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.uidb64 || err.response?.data?.token || err.response?.data?.new_password || err.response?.data?.new_password2
-      toast.error(errorMsg);
+    } catch (err: unknown) {
+      const error = err as AxiosError<ErrorResponse>;
+      const data = error.response?.data;
+      const errors = [
+        data?.uidb64,
+        data?.token,
+        ...(data?.new_password || []),
+        ...(data?.new_password2 || []),
+      ].filter(Boolean);
+      toast.error(errors.join(' ') || 'Password reset failed');
       throw err;
     } finally {
       set({ loading: false });

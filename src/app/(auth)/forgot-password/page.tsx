@@ -32,6 +32,7 @@ export default function ResetPasswordPage() {
       await requestPasswordReset(data.email);
       toast.dismiss(toastId);
     } catch (err: any) {
+      console.log(err)
       toast.dismiss(toastId);
     }
   };

@@ -49,6 +49,7 @@ export default function LoginPage() {
       toast.dismiss(toastId);
       router.push('/');
     } catch (error: any) {
+      console.log(error)
       toast.dismiss(toastId);
     }
   };
