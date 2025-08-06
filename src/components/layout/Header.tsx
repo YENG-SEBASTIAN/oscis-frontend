@@ -6,6 +6,8 @@ import { Search, ShoppingCart, User, Menu, Heart, Bell } from 'lucide-react';
 import SearchComponent from '../common/SearchComponent';
 import { AppSettings } from '@/settings/settings';
 import NotificationCenter from '../notification/Notification';
+import { useAuthStore } from '@/store/authStore';
+import { useRouter } from 'next/navigation';
 
 
 interface HeaderProps {
@@ -13,6 +15,10 @@ interface HeaderProps {
 }
 
 export default function Header({ onMobileMenuToggle }: HeaderProps) {
+  const router = useRouter();
+
+  const { logout, user } = useAuthStore();
+
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [cartCount, setCartCount] = useState(3);
 
@@ -114,24 +120,51 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
               {/* Dropdown Menu */}
               <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                 <div className="py-2">
-                  <Link href="/account" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                    My Account
-                  </Link>
-                  <Link href="/account/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                    My Orders
-                  </Link>
-                  <Link href="/wishlist" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                    Wishlist
-                  </Link>
-                  <hr className="my-2" />
-                  <Link href="/login" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                    Sign In
-                  </Link>
-                  <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                    Sign Out
-                  </button>
+                  {user && (
+                    <>
+                      <Link
+                        href="/account"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        My Account
+                      </Link>
+                      <Link
+                        href="/account/orders"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        My Orders
+                      </Link>
+                      <Link
+                        href="/wishlist"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        Wishlist
+                      </Link>
+                      <hr className="my-2" />
+                    </>
+                  )}
+
+                  {!user ? (
+                    <Link
+                      href="/login"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      Sign In
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={async () => {
+                        await logout();
+                        router.push('/login');
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      Sign Out
+                    </button>
+                  )}
                 </div>
               </div>
+
             </div>
           </div>
         </div>
