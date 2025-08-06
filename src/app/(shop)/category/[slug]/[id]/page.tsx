@@ -7,30 +7,23 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 
-interface Params {
-  params: {
-    slug: string;
-    id: string;
-  };
-}
-
-export default function ProductDetailPage({ params }: Params) {
-  // Find the category
+export default function ProductDetailPage({
+  params,
+}: {
+  params: { slug: string; id: string };
+}) {
   const category = categories.find((c) => c.slug === params.slug);
   if (!category) return notFound();
 
-  // Find the product
   const product = category.products.find((p) => p.id === params.id);
   if (!product) return notFound();
 
   const handleAddToCart = () => {
     console.log('Added to cart:', product.id);
-    // Add your cart logic here
   };
 
   const handleBuyNow = () => {
     console.log('Buy now:', product.id);
-    // Add your checkout logic here
   };
 
   return (
