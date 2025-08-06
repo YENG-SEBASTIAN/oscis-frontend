@@ -21,8 +21,10 @@ type LoginData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, user, loading } = useAuthStore();
+  const { login, user, loading, isAuthenticated } = useAuthStore();
+
   const [showPassword, setShowPassword] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
 
   const {
     register,
@@ -32,24 +34,26 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  // Redirect if already logged in
+  // Prevent hydration mismatch & redirect only after full auth check
   useEffect(() => {
-    if (user) {
+    setHasMounted(true);
+    if (user && isAuthenticated) {
       router.replace('/');
     }
-  }, [user, router]);
-
+  }, [user, isAuthenticated, router]);
 
   const onSubmit = async (data: LoginData) => {
     const toastId = toast.loading('Signing in...');
     try {
       await login(data.email, data.password);
-      router.push('/');
       toast.dismiss(toastId);
+      router.push('/');
     } catch (error: any) {
       toast.dismiss(toastId);
     }
   };
+
+  if (!hasMounted) return null; // prevent flicker during hydration
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -69,7 +73,7 @@ export default function LoginPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-6 shadow-lg rounded-xl sm:px-10 border border-gray-100">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Email Input */}
+            {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 Email Address
@@ -89,7 +93,7 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* Password Input */}
+            {/* Password */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 Password
@@ -119,14 +123,14 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* Forgot Password Link */}
+            {/* Forgot Password */}
             <div className="flex justify-between text-sm">
               <Link href="/forgot-password" className="text-blue-600 hover:text-blue-500">
                 Forgot password?
               </Link>
             </div>
 
-            {/* Submit Button */}
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}

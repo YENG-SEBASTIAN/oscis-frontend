@@ -2,13 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Search, ShoppingCart, User, Menu, Heart, Bell } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, Heart } from 'lucide-react';
 import SearchComponent from '../common/SearchComponent';
 import { AppSettings } from '@/settings/settings';
 import NotificationCenter from '../notification/Notification';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
-
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void;
@@ -16,11 +15,12 @@ interface HeaderProps {
 
 export default function Header({ onMobileMenuToggle }: HeaderProps) {
   const router = useRouter();
-
-  const { logout, user } = useAuthStore();
+  const { logout, user, isAuthenticated } = useAuthStore();
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [cartCount, setCartCount] = useState(3);
+
+  const isUserLoggedIn = user && isAuthenticated;
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
@@ -58,11 +58,7 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
           <Link href="/" className="flex items-center space-x-2">
             <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center overflow-hidden">
               <div className="w-8 h-8 bg-white rounded-md flex items-center justify-center">
-                <img
-                  src="/logo.jpg"
-                  alt="Logo"
-                  className="w-6 h-6 object-contain"
-                />
+                <img src="/logo.jpg" alt="Logo" className="w-6 h-6 object-contain" />
               </div>
             </div>
             <div className="hidden sm:block">
@@ -90,15 +86,17 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
             </button>
 
             {/* Wishlist */}
-            <Link href="/wishlist" className="relative p-2 rounded-full hover:bg-gray-100 transition-colors group">
-              <Heart size={20} className="group-hover:text-red-500 text-red-400 transition-colors" />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                2
-              </span>
-            </Link>
+            {isUserLoggedIn && (
+              <Link href="/wishlist" className="relative p-2 rounded-full hover:bg-gray-100 transition-colors group">
+                <Heart size={20} className="group-hover:text-red-500 text-red-400 transition-colors" />
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  2
+                </span>
+              </Link>
+            )}
 
             {/* Notifications */}
-            <NotificationCenter />
+            {isUserLoggedIn && <NotificationCenter />}
 
             {/* Cart */}
             <Link href="/cart" className="relative p-2 rounded-full hover:bg-gray-100 transition-colors group">
@@ -120,7 +118,7 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
               {/* Dropdown Menu */}
               <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                 <div className="py-2">
-                  {user && (
+                  {isUserLoggedIn ? (
                     <>
                       <Link
                         href="/account"
@@ -141,30 +139,26 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
                         Wishlist
                       </Link>
                       <hr className="my-2" />
+                      <button
+                        onClick={async () => {
+                          await logout();
+                          router.push('/login');
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        Sign Out
+                      </button>
                     </>
-                  )}
-
-                  {!user ? (
+                  ) : (
                     <Link
                       href="/login"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                     >
                       Sign In
                     </Link>
-                  ) : (
-                    <button
-                      onClick={async () => {
-                        await logout();
-                        router.push('/login');
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                    >
-                      Sign Out
-                    </button>
                   )}
                 </div>
               </div>
-
             </div>
           </div>
         </div>
