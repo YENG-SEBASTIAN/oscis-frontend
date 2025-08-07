@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Search, ShoppingCart, User, Menu, Heart } from 'lucide-react';
-import SearchComponent from '../common/SearchComponent';
-import { AppSettings } from '@/settings/settings';
-import NotificationCenter from '../notification/Notification';
-import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
+import { Search, ShoppingCart, User, Menu, Heart } from 'lucide-react';
+
+import SearchComponent from '../common/SearchComponent';
+import NotificationCenter from '../notification/Notification';
+import { AppSettings } from '@/settings/settings';
+import { useAuthStore } from '@/store/authStore';
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void;
@@ -18,27 +19,22 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
   const { logout, user, isAuthenticated } = useAuthStore();
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(3);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(3); // Replace this with dynamic cart count later
 
   const isUserLoggedIn = user && isAuthenticated;
+
+  const closeAccountMenu = () => setIsAccountMenuOpen(false);
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
       {/* Top Bar */}
       <div className="bg-gray-900 text-white py-2 hidden md:block">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center text-sm">
-            <div className="flex space-x-6">
-              <span>📞 Support: {AppSettings.contact.phone}</span>
-            </div>
-            <div className="flex space-x-4">
-              <Link href="/track-order" className="hover:text-gray-300 transition-colors">
-                Track Order
-              </Link>
-              <Link href="/help" className="hover:text-gray-300 transition-colors">
-                Help
-              </Link>
-            </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center text-sm">
+          <div>📞 Support: {AppSettings.contact.phone}</div>
+          <div className="flex space-x-4">
+            <Link href="/track-order" className="hover:text-gray-300">Track Order</Link>
+            <Link href="/help" className="hover:text-gray-300">Help</Link>
           </div>
         </div>
       </div>
@@ -48,7 +44,7 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
         <div className="flex items-center justify-between h-16">
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 rounded-md text-black hover:bg-gray-100 transition-colors"
+            className="md:hidden p-2 rounded-md text-black hover:bg-gray-100"
             onClick={onMobileMenuToggle}
           >
             <Menu size={24} />
@@ -67,7 +63,7 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
             </div>
           </Link>
 
-          {/* Search Bar - Desktop */}
+          {/* Desktop Search */}
           <div className="hidden md:flex flex-1 max-w-2xl mx-8">
             <SearchComponent
               placeholder="Search products, brands, categories..."
@@ -77,9 +73,9 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
 
           {/* Right Actions */}
           <div className="flex items-center space-x-4">
-            {/* Search Button - Mobile */}
+            {/* Mobile Search Toggle */}
             <button
-              className="md:hidden p-2 rounded-full text-blue-600 hover:bg-gray-100 transition-colors"
+              className="md:hidden p-2 rounded-full text-blue-600 hover:bg-gray-100"
               onClick={() => setIsSearchOpen(!isSearchOpen)}
             >
               <Search size={20} />
@@ -87,8 +83,8 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
 
             {/* Wishlist */}
             {isUserLoggedIn && (
-              <Link href="/wishlist" className="relative p-2 rounded-full hover:bg-gray-100 transition-colors group">
-                <Heart size={20} className="group-hover:text-red-500 text-red-400 transition-colors" />
+              <Link href="/wishlist" className="relative p-2 rounded-full hover:bg-gray-100 group">
+                <Heart size={20} className="group-hover:text-red-500 text-red-400" />
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   2
                 </span>
@@ -99,8 +95,8 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
             {isUserLoggedIn && <NotificationCenter />}
 
             {/* Cart */}
-            <Link href="/cart" className="relative p-2 rounded-full hover:bg-gray-100 transition-colors group">
-              <ShoppingCart size={20} className="group-hover:text-blue-600 text-blue-500 transition-colors" />
+            <Link href="/cart" className="relative p-2 rounded-full hover:bg-gray-100 group">
+              <ShoppingCart size={20} className="group-hover:text-blue-600 text-blue-500" />
               {cartCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
                   {cartCount}
@@ -108,57 +104,66 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
               )}
             </Link>
 
-            {/* User Account */}
-            <div className="relative group">
-              <button className="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 transition-colors">
+            {/* User Account (Click Toggle) */}
+            <div className="relative">
+              <button
+                onClick={() => setIsAccountMenuOpen(prev => !prev)}
+                className="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100"
+              >
                 <User size={20} className="text-black" />
                 <span className="hidden lg:block text-sm font-medium text-black">Account</span>
               </button>
 
-              {/* Dropdown Menu */}
-              <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <div className="py-2">
-                  {isUserLoggedIn ? (
-                    <>
+              {isAccountMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                  <div className="py-2">
+                    {isUserLoggedIn ? (
+                      <>
+                        <Link
+                          href="/account"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={closeAccountMenu}
+                        >
+                          My Account
+                        </Link>
+                        <Link
+                          href="/account/orders"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={closeAccountMenu}
+                        >
+                          My Orders
+                        </Link>
+                        <Link
+                          href="/wishlist"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={closeAccountMenu}
+                        >
+                          Wishlist
+                        </Link>
+                        <hr className="my-2" />
+                        <button
+                          onClick={async () => {
+                            await logout();
+                            closeAccountMenu();
+                            router.push('/login');
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Sign Out
+                        </button>
+                      </>
+                    ) : (
                       <Link
-                        href="/account"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        href="/login"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={closeAccountMenu}
                       >
-                        My Account
+                        Sign In
                       </Link>
-                      <Link
-                        href="/account/orders"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      >
-                        My Orders
-                      </Link>
-                      <Link
-                        href="/wishlist"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      >
-                        Wishlist
-                      </Link>
-                      <hr className="my-2" />
-                      <button
-                        onClick={async () => {
-                          await logout();
-                          router.push('/login');
-                        }}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      >
-                        Sign Out
-                      </button>
-                    </>
-                  ) : (
-                    <Link
-                      href="/login"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                    >
-                      Sign In
-                    </Link>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
