@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,7 +22,38 @@ const resetConfirmSchema = z
 
 type ResetConfirmData = z.infer<typeof resetConfirmSchema>;
 
-export default function ResetConfirmPage() {
+// Loading component for Suspense fallback
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-1 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="flex justify-center">
+          <div className="h-12 w-12 rounded-full border-2 border-blue-500 animate-pulse bg-gray-200"></div>
+        </div>
+        <div className="mt-6 text-center">
+          <div className="h-8 bg-gray-200 rounded animate-pulse mx-auto w-48"></div>
+        </div>
+        <div className="mt-2 text-center">
+          <div className="h-4 bg-gray-200 rounded animate-pulse mx-auto w-64"></div>
+        </div>
+      </div>
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-6 shadow sm:rounded-lg sm:px-10">
+          <div className="space-y-6">
+            <div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
+            <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-4 bg-gray-200 rounded animate-pulse w-32"></div>
+            <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-10 bg-blue-200 rounded animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// The actual component that uses useSearchParams
+function ResetConfirmContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { confirmPasswordReset, loading } = useAuthStore();
@@ -154,5 +185,14 @@ export default function ResetConfirmPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function ResetConfirmPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <ResetConfirmContent />
+    </Suspense>
   );
 }

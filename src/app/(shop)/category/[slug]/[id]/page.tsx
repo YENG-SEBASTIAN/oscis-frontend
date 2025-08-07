@@ -7,15 +7,19 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 
-export default function ProductDetailPage({
-  params,
-}: {
-  params: { slug: string; id: string };
-}) {
-  const category = categories.find((c) => c.slug === params.slug);
+interface ProductDetailPageProps {
+  params: Promise<{
+    slug: string;
+    id: string;
+  }>;
+}
+
+export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
+  const { slug, id } = await params;
+  const category = categories.find((c) => c.slug === slug);
   if (!category) return notFound();
 
-  const product = category.products.find((p) => p.id === params.id);
+  const product = category.products.find((p) => p.id === id);
   if (!product) return notFound();
 
   const handleAddToCart = () => {
@@ -39,7 +43,7 @@ export default function ProductDetailPage({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        {/* Product Images */}
+        {/* Product Image */}
         <div className="space-y-4">
           <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
             <Image
@@ -83,9 +87,7 @@ export default function ProductDetailPage({
           {/* Price */}
           <div className="space-y-2">
             <div className="flex items-center space-x-4">
-              <span className="text-3xl font-bold text-gray-900">
-                ${product.price}
-              </span>
+              <span className="text-3xl font-bold text-gray-900">${product.price}</span>
               {product.originalPrice && (
                 <span className="text-xl text-gray-500 line-through">
                   ${product.originalPrice}
@@ -126,7 +128,7 @@ export default function ProductDetailPage({
             </Button>
           </div>
 
-          {/* Wishlist Button */}
+          {/* Wishlist */}
           <Button variant="ghost" className="w-full">
             <Heart className="mr-2 h-5 w-5" />
             Add to Wishlist

@@ -7,13 +7,14 @@ import Image from 'next/image';
 import { ShoppingCart, Shield, Truck, RefreshCw, Star, Check, Package } from 'lucide-react';
 
 interface ProductPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export default function ProductDetailPage({ params }: ProductPageProps) {
-  const productId = params.id;
+export default async function ProductDetailPage({ params }: ProductPageProps) {
+  const {id} = await params;
+  const productId = id;
 
   const product: ProductInterface | undefined = featuredProducts.find(
     (item) => item.id.toString() === productId
