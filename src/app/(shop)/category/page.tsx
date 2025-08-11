@@ -1,12 +1,18 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import CategoryCard from '@/components/common/CategoryCard';
-import { categories } from '@/data/category';
+import { useCategoryStore } from '@/store/useCategoryStore';
+import { ProductCardSkeleton } from '@/components/product/ProductCardSkeleton';
 
 const Category = () => {
   const router = useRouter();
+  const { categories, fetchCategories, isLoading, error } = useCategoryStore();
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   return (
     <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
@@ -18,13 +24,19 @@ const Category = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {categories.map((category, index) => (
+        {isLoading && <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <ProductCardSkeleton key={`skeleton-${i}`} />
+          ))}
+        </div>}
+        {error && <p className="text-center text-red-500">{error}</p>}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {categories.map((category) => (
             <CategoryCard
-              key={index}
+              key={category.id}
               name={category.name}
-              count={category.count}
-              image={category.image}
+              image={category.image.url}
               onClick={() => router.push(`/category/${category.slug}`)}
             />
           ))}

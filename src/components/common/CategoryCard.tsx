@@ -4,12 +4,11 @@ import React from 'react';
 
 interface CategoryCardProps {
   name: string;
-  count: string;
   image: string;
   onClick?: () => void;
 }
 
-const CategoryCard: React.FC<CategoryCardProps> = ({ name, count, image, onClick }) => {
+const CategoryCard: React.FC<CategoryCardProps> = ({ name, image, onClick }) => {
   return (
     <div
       onClick={onClick}
@@ -20,11 +19,13 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ name, count, image, onClick
           src={image}
           alt={name}
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = '/fallback.jpg'; // fallback image
+          }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
         <div className="absolute bottom-4 left-4 text-white">
           <h3 className="text-xl font-bold">{name}</h3>
-          <p className="text-sm text-gray-200">{count}</p>
         </div>
       </div>
 

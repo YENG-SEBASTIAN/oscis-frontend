@@ -1,11 +1,27 @@
 'use client';
 
-import React from 'react';
-import { featuredProducts } from '@/data/products';
-import ProductList from '@/components/product/ProductCard';
-import { ProductInterface } from '@/types/types';
+import React, { useEffect } from 'react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ProductCardSkeleton } from '@/components/product/ProductCardSkeleton';
+import { ProductList } from '@/components/product/ProductCard';
+import { useProductStore } from '@/store/useProductStore';
+import type { ProductInterface } from '@/types/types';
 
-const Products: React.FC = () => {
+
+
+const ProductsPage: React.FC = () => {
+  const {
+    products,
+    isLoading,
+    error,
+    fetchProducts,
+  } = useProductStore();
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
   const handleAddToCart = (product: ProductInterface) => {
     console.log('Added to cart:', product);
   };
@@ -18,22 +34,63 @@ const Products: React.FC = () => {
     console.log('Added to wishlist:', product);
   };
 
+  if (error) {
+    return (
+      <div className="p-4 md:p-8">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-6">
+          <div className="flex flex-col items-center text-center">
+            <AlertCircle className="h-8 w-8 text-red-500 mb-4" />
+            <h3 className="text-lg font-medium text-red-800 mb-2">
+              Error loading products
+            </h3>
+            <p className="text-red-600 mb-4">
+              {error || 'Failed to load products. Please try again.'}
+            </p>
+            <Button
+              variant="outline"
+              className="text-red-600 border-red-300 hover:bg-red-100"
+              onClick={() => fetchProducts()}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <main className="p-4 md:p-8">
-      <div className="text-center mb-16">
-        <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-800">Featured Products</h2>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          Handpicked premium shoes that combine style, comfort, and quality
-        </p>
-      </div>
-      <ProductList
-        products={featuredProducts}
-        onAddToCart={handleAddToCart}
-        onViewDetails={handleViewDetails}
-        onAddToWishlist={handleAddToWishlist}
-      />
+      <section className="mb-16">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-800">
+            All Products
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Browse our complete collection of premium products
+          </p>
+        </div>
+
+        {isLoading && products.length === 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <ProductCardSkeleton key={`skeleton-${i}`} />
+            ))}
+          </div>
+        ) : products.length > 0 ? (
+          <ProductList
+            products={products}
+            onAddToCart={handleAddToCart}
+            onViewDetails={handleViewDetails}
+            onAddToWishlist={handleAddToWishlist}
+          />
+        ) : (
+          <p className="text-center text-gray-500">No products found.</p>
+        )}
+      </section>
     </main>
   );
 };
 
-export default Products;
+export default ProductsPage;

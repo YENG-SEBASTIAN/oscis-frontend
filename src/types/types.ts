@@ -1,15 +1,31 @@
 
-export interface ProductInterface {
-    id: string;
-    name: string;
-    price: number;
-    originalPrice: number;
-    image: string;
-    description?: string;
-    rating: number;
-    reviews: number;
-    badge?: string | null;
-    category: string;
+// export interface ProductInterface {
+//     id: string;
+//     name: string;
+//     price: number;
+//     originalPrice: number;
+//     image: string;
+//     description?: string;
+//     rating: number;
+//     reviews: number;
+//     badge?: string | null;
+//     category: string;
+// }
+
+
+export interface ImageInterface {
+  id: string;
+  name: string;
+  url: string;
+  file_type: string;
+  mime_type: string;
+  file_size: string;
+  dimensions: {
+    width: number;
+    height: number;
+  };
+  alt_text?: string | null;
+  created_at: string;
 }
 
 export interface CategoryInterface {
@@ -17,7 +33,59 @@ export interface CategoryInterface {
     name: string;
     slug: string;
     count: string;
-    image: string;
+    image: ProductImage;
     description?: string;
     products: ProductInterface[];
+}
+
+
+export interface ProductImage {
+  id: string;
+  name: string;
+  url: string;
+  file_type: string;
+  mime_type: string;
+  file_size: string;
+  dimensions: {
+    width: number;
+    height: number;
+  };
+  alt_text?: string | null;
+  created_at: string;
+}
+
+export interface ProductFeature {
+  product?: string;
+  title?: string;
+  description: string;
+  order?: number;
+}
+
+export interface ConditionGuideItem {
+  product?: string;
+  rating: string;
+  description: string;
+  order?: number;
+}
+
+export interface ProductInterface {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  price: number;
+  original_price: number;
+  rating: number;
+  review_count: number;
+  badge?: string;
+  is_featured: boolean;
+  is_active: boolean;
+  category: CategoryInterface;
+  primary_image?: ProductImage;
+  images: ProductImage[];
+  discount_percentage: number;
+  features: ProductFeature[];
+  condition_guide: ConditionGuideItem[];
+  created_at: string;
+  updated_at: string;
 }

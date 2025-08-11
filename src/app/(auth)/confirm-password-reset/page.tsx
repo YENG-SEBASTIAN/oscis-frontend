@@ -75,8 +75,6 @@ function ResetConfirmContent() {
   const onSubmit = async (data: ResetConfirmData) => {
     const toastId = toast.loading('Resetting your password...');
     try {
-      console.log("uidb64:", uidb64);
-      console.log("Token:", token);
       await confirmPasswordReset(uidb64, token, data.newPassword, data.confirmNewPassword);
       toast.dismiss(toastId);
       router.push('/login');
