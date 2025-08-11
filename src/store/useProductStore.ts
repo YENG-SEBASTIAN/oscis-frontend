@@ -3,11 +3,11 @@ import { produce } from 'immer';
 import ApiService from '@/lib/apiService';
 import type { ProductInterface } from '@/types/types';
 
-interface PaginatedResponse<T> {
+interface ProductAPIResponse {
   count: number;
   next: string | null;
   previous: string | null;
-  results: T[];
+  results: ProductInterface[];
 }
 
 interface ProductState {
@@ -53,16 +53,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
   fetchProducts: async (params = {}) => {
     set({ isLoading: true, error: null });
     try {
-      // Build query string, skipping empty values
-      const queryString = new URLSearchParams(
-        Object.entries(params)
-          .filter(([_, value]) => value !== undefined && value !== null && value !== '')
-          .map(([key, value]) => [key, String(value)])
-      ).toString();
-
-      const url = queryString ? `/products/?${queryString}` : `/products/`;
-
-      const response = await ApiService.get<PaginatedResponse<ProductInterface> | ProductInterface[]>(url);
+      const response = await ApiService.get<ProductAPIResponse>('/products/', { params });
 
       if (Array.isArray(response)) {
         // Non-paginated response
