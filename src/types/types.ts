@@ -13,6 +13,22 @@
 // }
 
 
+
+export interface CategoryInterface {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  image: ImageInterface;
+  alt_text: string;
+  display_order: number;
+  is_active: boolean;
+  featured: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+
 export interface ImageInterface {
   id: string;
   name: string;
@@ -26,16 +42,6 @@ export interface ImageInterface {
   };
   alt_text?: string | null;
   created_at: string;
-}
-
-export interface CategoryInterface {
-    id: string;
-    name: string;
-    slug: string;
-    count: string;
-    image: ProductImage;
-    description?: string;
-    products: ProductInterface[];
 }
 
 

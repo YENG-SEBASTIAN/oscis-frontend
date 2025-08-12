@@ -1,25 +1,33 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, X, Star, ArrowRight, TrendingUp, Clock, Tag } from 'lucide-react';
-import { categories } from '@/data/category';
+import {
+  Search,
+  X,
+  Star,
+  ArrowRight,
+  Clock,
+  Tag
+} from 'lucide-react';
+import { useCategoryStore } from '@/store/useCategoryStore';
+import { useProductStore } from '@/store/useProductStore';
+import type { CategoryInterface, ProductInterface, ProductImage } from '@/types/types';
 
 interface SearchResult {
-  type: 'product' | 'category';
-  id: string;
+  id: string | number;
   name: string;
-  description?: string;
-  price?: number;
-  originalPrice?: number;
-  image: string;
-  rating?: number;
-  reviews?: number;
-  badge?: string | null;
-  category?: string;
   slug?: string;
-  count?: string;
+  description?: string | null;
+  image?: string | null;
+  badge?: string | null;
+  type: 'product' | 'category';
+  price?: number;
+  original_price?: number;
+  rating?: number;
+  review_count?: number;
+  count?: number;
 }
 
 interface SearchComponentProps {
@@ -29,102 +37,157 @@ interface SearchComponentProps {
   className?: string;
 }
 
-export default function SearchComponent({ 
-  isOpen = false, 
-  onClose, 
-  placeholder = "Search products, brands, categories...",
+export default function SearchComponent({
+  isOpen = false,
+  onClose,
+  placeholder = "Search products, categories...",
   className = ""
 }: SearchComponentProps) {
+  const { categories, isLoading: loadingCategory, fetchCategories } = useCategoryStore();
+  const { products, isLoading: loadingProducts, fetchProducts } = useProductStore();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [recentSearches, setRecentSearches] = useState<string[]>([
-    'Nike sneakers', 'Formal shoes', 'Running boots'
-  ]);
-  const [popularSearches] = useState<string[]>([
-    'Best sellers', 'New arrivals', 'Sale items', 'Sports shoes', 'Heels'
-  ]);
-  
+
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [popularSearches] = useState<string[]>(['Shoes', 'Bags', 'Watches']);
+
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  // Get all products from categories for searching
-  const allProducts = categories.flatMap(category => 
-    category.products.map(product => ({
-      ...product,
-      type: 'product' as const
-    }))
-  );
+  // Load recent searches from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('recentSearches');
+      if (stored) setRecentSearches(JSON.parse(stored));
+    } catch (err) {
+      // ignore localStorage errors
+    }
+  }, []);
 
-  // Add categories as searchable items
-  const allCategories = categories.map(category => ({
-    type: 'category' as const,
-    id: category.id,
-    name: category.name,
-    description: category.description,
-    image: category.image,
-    slug: category.slug,
-    count: category.count
-  }));
+  // Save recent searches when updated
+  useEffect(() => {
+    try {
+      localStorage.setItem('recentSearches', JSON.stringify(recentSearches));
+    } catch (err) {
+      // ignore
+    }
+  }, [recentSearches]);
 
-  // Combine all searchable items
-  const allSearchableItems = [...allProducts, ...allCategories];
+  // Ensure we have some initial data (only fetch if store is empty)
+  useEffect(() => {
+    if (categories.length === 0) fetchCategories();
+    if (products.length === 0) fetchProducts();
+  }, [categories.length, products.length, fetchCategories, fetchProducts]);
 
-  // Search function
-  const performSearch = (query: string) => {
-    if (!query.trim()) {
+  // Helper: map product -> SearchResult
+  const mapProduct = (p: ProductInterface): SearchResult => {
+    const image =
+      (p.primary_image as ProductImage | undefined)?.url ||
+      p.images?.[0]?.url ||
+      undefined;
+
+    return {
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      description: p.description,
+      image,
+      badge: p.badge,
+      type: 'product',
+      price: p.price,
+      original_price: p.original_price,
+      rating: p.rating,
+      review_count: p.review_count
+    };
+  };
+
+  // Helper: map category -> SearchResult
+  const mapCategory = (c: CategoryInterface): SearchResult => ({
+    id: c.id,
+    name: c.name,
+    slug: c.slug,
+    description: c.description,
+    image: (c as any).image?.url ?? undefined,
+    badge: undefined,
+    type: 'category',
+    count: undefined
+  });
+
+  // Perform search (server-backed via store fetches), debounced by effect below
+  const performSearch = async (query: string) => {
+    const q = query.trim();
+    if (!q) {
       setSearchResults([]);
       setShowResults(false);
+      setIsSearching(false);
       return;
     }
 
     setIsSearching(true);
-    
-    // Simulate search delay for better UX
-    setTimeout(() => {
-      const normalizedQuery = query.toLowerCase().trim();
-      
-      const results = allSearchableItems.filter(item => {
-        const nameMatch = item.name.toLowerCase().includes(normalizedQuery);
-        const descriptionMatch = item.description?.toLowerCase().includes(normalizedQuery);
-        
-        return nameMatch || descriptionMatch;
-      });
 
-      // Sort results by relevance
-      const sortedResults = results.sort((a, b) => {
-        const aNameMatch = a.name.toLowerCase().startsWith(normalizedQuery) ? 2 : 
-                          a.name.toLowerCase().includes(normalizedQuery) ? 1 : 0;
-        const bNameMatch = b.name.toLowerCase().startsWith(normalizedQuery) ? 2 : 
-                          b.name.toLowerCase().includes(normalizedQuery) ? 1 : 0;
-        
-        if (aNameMatch !== bNameMatch) return bNameMatch - aNameMatch;
-        
-        // Prioritize products over categories
+    try {
+      // ask the stores to fetch server-side filtered data
+      // they update the store; we then read latest state synchronously
+      await Promise.all([
+        fetchProducts({ search: q }),
+        fetchCategories({ search: q })
+      ]);
+
+      // read freshest state from stores (synchronously)
+      const latestProducts = useProductStore.getState().products || [];
+      const latestCategories = useCategoryStore.getState().categories || [];
+
+      const prodResults = latestProducts.map(mapProduct);
+      const catResults = latestCategories.map(mapCategory);
+
+      const combined = [...prodResults, ...catResults];
+
+      // sort by relevance: startsWith > includes, products before categories, product rating tiebreak
+      const normalizedQuery = q.toLowerCase();
+      const sorted = combined.sort((a, b) => {
+        const aName = a.name.toLowerCase();
+        const bName = b.name.toLowerCase();
+
+        const aScore = aName.startsWith(normalizedQuery) ? 2 : (aName.includes(normalizedQuery) ? 1 : 0);
+        const bScore = bName.startsWith(normalizedQuery) ? 2 : (bName.includes(normalizedQuery) ? 1 : 0);
+
+        if (aScore !== bScore) return bScore - aScore;
+
         if (a.type === 'product' && b.type === 'category') return -1;
         if (a.type === 'category' && b.type === 'product') return 1;
-        
-        // For products, prioritize by rating
+
         if (a.type === 'product' && b.type === 'product') {
           return (b.rating || 0) - (a.rating || 0);
         }
-        
+
         return 0;
       });
 
-      setSearchResults(sortedResults.slice(0, 10)); // Limit to 10 results
+      setSearchResults(sorted.slice(0, 10));
       setShowResults(true);
+    } catch (err) {
+      // On error, show nothing but stop searching
+      setSearchResults([]);
+      setShowResults(true);
+    } finally {
       setIsSearching(false);
-    }, 300);
+    }
   };
 
-  // Handle search input change
+  // Debounce searchQuery changes
   useEffect(() => {
-    performSearch(searchQuery);
-  }, [searchQuery]);
+    const handler = setTimeout(() => {
+      performSearch(searchQuery);
+    }, 300);
 
-  // Handle click outside to close results
+    return () => clearTimeout(handler);
+    // intentionally exclude performSearch from deps to avoid recreations; fetchProducts/fetchCategories are stable from store
+  }, [searchQuery, fetchProducts, fetchCategories]);
+
+  // Click outside closes dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
@@ -140,26 +203,28 @@ export default function SearchComponent({
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
       searchInputRef.current.focus();
+      setShowResults(true);
     }
   }, [isOpen]);
 
-  // Handle search submission
+  // When user submits search (via Enter or clicking suggestion)
   const handleSearch = (query?: string) => {
-    const searchTerm = query || searchQuery;
-    if (searchTerm.trim()) {
-      // Add to recent searches
-      const updatedRecent = [searchTerm, ...recentSearches.filter(s => s !== searchTerm)].slice(0, 5);
-      setRecentSearches(updatedRecent);
-      
-      // Navigate to search results page or handle search
-      window.location.href = `/search?q=${encodeURIComponent(searchTerm)}`;
-    }
+    const finalQuery = (query ?? searchQuery).trim();
+    if (!finalQuery) return;
+
+    // add to recent (no duplicates)
+    setRecentSearches(prev => {
+      const updated = [finalQuery, ...prev.filter(t => t !== finalQuery)].slice(0, 5);
+      try { localStorage.setItem('recentSearches', JSON.stringify(updated)); } catch (e) {}
+      return updated;
+    });
+
+    // ensure searchQuery updated (this will trigger performSearch via effect)
+    setSearchQuery(finalQuery);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
+    if (e.key === 'Enter') handleSearch();
     if (e.key === 'Escape') {
       setShowResults(false);
       onClose?.();
@@ -170,6 +235,17 @@ export default function SearchComponent({
     setSearchQuery('');
     setSearchResults([]);
     setShowResults(false);
+  };
+
+  // Clicking a result: push recent searches & close (Link will still navigate)
+  const onResultClick = (name: string) => {
+    setRecentSearches(prev => {
+      const updated = [name, ...prev.filter(t => t !== name)].slice(0, 5);
+      try { localStorage.setItem('recentSearches', JSON.stringify(updated)); } catch (e) {}
+      return updated;
+    });
+    setShowResults(false);
+    onClose?.();
   };
 
   return (
@@ -186,7 +262,7 @@ export default function SearchComponent({
           placeholder={placeholder}
           className="w-full pl-4 pr-12 py-3 text-gray-900 placeholder-gray-400 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-all"
         />
-        
+
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center space-x-1">
           {searchQuery && (
             <button
@@ -240,7 +316,6 @@ export default function SearchComponent({
                   </div>
                 </div>
               )}
-
             </div>
           )}
 
@@ -254,36 +329,36 @@ export default function SearchComponent({
                       Search Results ({searchResults.length})
                     </h3>
                     <Link
-                      href={`/search?q=${encodeURIComponent(searchQuery)}`}
+                      href={`/category?q=${encodeURIComponent(searchQuery)}`}
                       className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center space-x-1"
                     >
                       <span>View all</span>
                       <ArrowRight size={14} />
                     </Link>
                   </div>
-                  
+
                   <div className="space-y-2">
                     {searchResults.map((result) => (
                       <Link
                         key={`${result.type}-${result.id}`}
-                        href={result.type === 'product' ? `/product/${result.id}` : `/category/${result.slug}`}
+                        href={result.type === 'product' ? `/products/${result.id}` : `/category/${result.slug}`}
                         className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors group"
-                        onClick={() => {
-                          setShowResults(false);
-                          onClose?.();
-                        }}
+                        onClick={() => onResultClick(result.name)}
                       >
                         {/* Image */}
                         <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                          <Image
-                            src={result.image}
-                            alt={result.name}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-200"
-                            sizes="48px"
-                          />
+                          {result.image && (
+                            // `result.image` is a URL
+                            <Image
+                              src={result.image}
+                              alt={result.name}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform duration-200"
+                              sizes="48px"
+                            />
+                          )}
                         </div>
-                        
+
                         {/* Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2">
@@ -299,45 +374,44 @@ export default function SearchComponent({
                               <Tag size={14} className="text-green-500" />
                             )}
                           </div>
-                          
+
                           {result.description && (
                             <p className="text-sm text-gray-500 truncate mt-1">
                               {result.description}
                             </p>
                           )}
-                          
+
                           <div className="flex items-center justify-between mt-1">
                             {result.type === 'product' ? (
                               <div className="flex items-center space-x-2">
                                 <span className="font-semibold text-gray-900">
-                                  ${result.price}
+                                  ${result.price?.toFixed(2)}
                                 </span>
-                                {result.originalPrice && result.originalPrice > result.price! && (
+                                {result.original_price && result.original_price > (result.price || 0) && (
                                   <span className="text-sm text-gray-400 line-through">
-                                    ${result.originalPrice}
+                                    ${result.original_price.toFixed(2)}
                                   </span>
                                 )}
-                                {result.rating && (
+                                {result.rating !== undefined && (
                                   <div className="flex items-center space-x-1">
                                     <Star size={12} className="text-yellow-400 fill-current" />
                                     <span className="text-xs text-gray-500">
-                                      {result.rating} ({result.reviews})
+                                      {result.rating} ({result.review_count ?? 0})
                                     </span>
                                   </div>
                                 )}
                               </div>
                             ) : (
                               <span className="text-sm text-gray-500">
-                                {result.count}
+                                {result.count ?? ''}
                               </span>
                             )}
-                            
                             <span className="text-xs text-gray-400 capitalize">
                               {result.type}
                             </span>
                           </div>
                         </div>
-                        
+
                         <ArrowRight size={16} className="text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </Link>
                     ))}

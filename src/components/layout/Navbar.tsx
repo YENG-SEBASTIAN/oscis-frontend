@@ -44,8 +44,6 @@ export default function Navbar() {
     setActiveDropdown(activeDropdown === dropdown ? null : dropdown);
   };
 
-  const totalProducts = categories.reduce((acc, cat) => acc + (cat.product_count || 0), 0);
-
   return (
     <nav className="bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -131,7 +129,7 @@ export default function Navbar() {
                   <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
                     <div>
                       <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Can't find what you're looking for?</h4>
-                      <p className="text-xs sm:text-sm text-gray-600">Browse our complete collection of {totalProducts}+ products</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Browse our complete collection of products</p>
                     </div>
                     <Link
                       href="/products"
