@@ -208,8 +208,6 @@ export default function CategoryDetailPage() {
           <section>
             <ProductList
               products={sortedProducts}
-              onAddToCart={handleAddToCart}
-              onViewDetails={handleViewDetails}
               onAddToWishlist={handleAddToWishlist}
             />
           </section>

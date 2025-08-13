@@ -5,25 +5,24 @@ import { ShoppingCart, Heart, Eye, Star } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { ProductInterface } from '@/types/types';
+import { useCartStore } from '@/store/useCartStore';
+
 
 interface ProductActionCallbacks {
-  onAddToCart: (product: ProductInterface) => void;
-  onViewDetails: (product: ProductInterface) => void;
   onAddToWishlist: (product: ProductInterface) => void;
 }
 
 interface ProductCardProps {
   product: ProductInterface;
-  onAddToCart: ProductActionCallbacks['onAddToCart'];
-  onViewDetails: ProductActionCallbacks['onViewDetails'];
   onAddToWishlist: ProductActionCallbacks['onAddToWishlist'];
 }
 
 const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
-  ({ product, onAddToCart, onViewDetails, onAddToWishlist }, ref) => {
+  ({ product, onAddToWishlist }, ref) => {
     const router = useRouter();
     const [mounted, setMounted] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
+    const {addItem} = useCartStore();
 
     useEffect(() => setMounted(true), []);
 
@@ -118,7 +117,7 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
               <Heart size={18} className="text-gray-600 hover:text-red-500" />
             </button>
             <button
-              onClick={(e) => handleAction(e, onViewDetails)}
+              onClick={() => handleClick()}
               className="bg-white p-2 rounded-full shadow hover:bg-blue-50 hover:scale-110 transition"
               aria-label={`View details for ${product.name}`}
             >
@@ -164,7 +163,7 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
           </div>
 
           <button
-            onClick={(e) => handleAction(e, onAddToCart)}
+            onClick={() => addItem(product.id)}
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 px-4 rounded-xl font-bold transition transform hover:scale-[1.02] hover:shadow-lg flex items-center justify-center gap-2"
             aria-label={`Add ${product.name} to cart`}
           >
@@ -194,13 +193,11 @@ const StarRating = ({ rating }: { rating: number }) => (
 
 interface ProductListProps {
   products: ProductInterface[];
-  onAddToCart: ProductActionCallbacks['onAddToCart'];
-  onViewDetails: ProductActionCallbacks['onViewDetails'];
   onAddToWishlist: ProductActionCallbacks['onAddToWishlist'];
 }
 
 export const ProductList = React.forwardRef<HTMLDivElement, ProductListProps>(
-  ({ products, onAddToCart, onViewDetails, onAddToWishlist }, ref) => (
+  ({ products, onAddToWishlist }, ref) => (
     <div
       ref={ref}
       className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
@@ -209,8 +206,6 @@ export const ProductList = React.forwardRef<HTMLDivElement, ProductListProps>(
         <ProductCard
           key={product.id}
           product={product}
-          onAddToCart={onAddToCart}
-          onViewDetails={onViewDetails}
           onAddToWishlist={onAddToWishlist}
         />
       ))}

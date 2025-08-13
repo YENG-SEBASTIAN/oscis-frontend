@@ -2,6 +2,12 @@ import axios, { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig } fro
 import { getAccessToken, getRefreshToken, setAccessToken, logout } from './auth';
 import { toast } from 'react-hot-toast';
 
+if (!process.env.NEXT_PUBLIC_MEDIA_API_BASE_URL) {
+  throw new Error("NEXT_PUBLIC_MEDIA_API_BASE_URL is not set in .env");
+}
+
+export const MediaBaseUrl = process.env.NEXT_PUBLIC_MEDIA_API_BASE_URL;
+
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
   withCredentials: true,

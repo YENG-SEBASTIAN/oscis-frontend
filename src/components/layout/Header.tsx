@@ -9,6 +9,7 @@ import SearchComponent from '../common/SearchComponent';
 import NotificationCenter from '../notification/Notification';
 import { AppSettings } from '@/settings/settings';
 import { useAuthStore } from '@/store/authStore';
+import { useCartStore } from '@/store/useCartStore';
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void;
@@ -17,10 +18,9 @@ interface HeaderProps {
 export default function Header({ onMobileMenuToggle }: HeaderProps) {
   const router = useRouter();
   const { logout, user, isAuthenticated } = useAuthStore();
-
+  const {items: cartCount} = useCartStore();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(3); // Replace this with dynamic cart count later
 
   const isUserLoggedIn = user && isAuthenticated;
 
@@ -97,9 +97,9 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
             {/* Cart */}
             <Link href="/cart" className="relative p-2 rounded-full hover:bg-gray-100 group">
               <ShoppingCart size={20} className="group-hover:text-blue-600 text-blue-500" />
-              {cartCount > 0 && (
+              {cartCount.length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
-                  {cartCount}
+                  {cartCount.length}
                 </span>
               )}
             </Link>

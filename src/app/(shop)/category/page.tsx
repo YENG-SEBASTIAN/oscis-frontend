@@ -115,23 +115,25 @@ export default function Category() {
                 <CategoryCard
                   key={category.id}
                   name={category.name}
-                  image={category.image.url}
+                  image={category.image?.url}
                   onClick={() => router.push(`/category/${category.slug}`)}
                 />
               ))}
             </div>
 
             {/* Pagination */}
-            <PaginationControls
-              count={count}
-              currentCount={categories.length}
-              next={next}
-              previous={previous}
-              isLoading={isLoading}
-              onNext={handleNext}
-              onPrev={handlePrev}
-              itemLabel="categories"
-            />
+            {next || previous &&
+              <PaginationControls
+                count={count}
+                currentCount={categories.length}
+                next={next}
+                previous={previous}
+                isLoading={isLoading}
+                onNext={handleNext}
+                onPrev={handlePrev}
+                itemLabel="categories"
+              />
+            }
           </>
         )}
 

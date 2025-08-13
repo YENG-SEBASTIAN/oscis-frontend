@@ -60,6 +60,13 @@ export interface ProductImage {
   created_at: string;
 }
 
+export interface ProductImageWrapper {
+  id: string;
+  image: ProductImage;
+  alt_text?: string | null;
+  display_order: number;
+}
+
 export interface ProductFeature {
   product?: string;
   title?: string;
@@ -88,7 +95,7 @@ export interface ProductInterface {
   is_active: boolean;
   category: CategoryInterface;
   primary_image?: ProductImage;
-  images: ProductImage[];
+  images: ProductImageWrapper[];
   discount_percentage: number;
   features: ProductFeature[];
   condition_guide: ConditionGuideItem[];

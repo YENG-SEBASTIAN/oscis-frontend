@@ -19,7 +19,6 @@ export default function ProductsPage() {
     previous,
     fetchProducts,
   } = useProductStore();
-
   const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch initial & page data
@@ -27,13 +26,6 @@ export default function ProductsPage() {
     fetchProducts({ page: currentPage });
   }, [fetchProducts, currentPage]);
 
-  const handleAddToCart = (product: ProductInterface) => {
-    console.log('Added to cart:', product);
-  };
-
-  const handleViewDetails = (product: ProductInterface) => {
-    console.log('View details of:', product);
-  };
 
   const handleAddToWishlist = (product: ProductInterface) => {
     console.log('Added to wishlist:', product);
@@ -109,10 +101,9 @@ export default function ProductsPage() {
           <>
             <ProductList
               products={products}
-              onAddToCart={handleAddToCart}
-              onViewDetails={handleViewDetails}
               onAddToWishlist={handleAddToWishlist}
             />
+            {next || previous && 
             <PaginationControls
               count={count}
               currentCount={products.length}
@@ -123,6 +114,7 @@ export default function ProductsPage() {
               onPrev={handlePrev}
               itemLabel="products"
             />
+            }
           </>
         )}
 

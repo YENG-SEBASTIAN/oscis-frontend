@@ -2,14 +2,15 @@
 
 import { ShoppingCart } from 'lucide-react';
 import { ProductInterface } from '@/types/types';
-
+import { useCartStore } from '@/store/useCartStore';
 interface AddToCartButtonProps {
   product: ProductInterface;
 }
 
 export default function AddToCartButton({ product }: AddToCartButtonProps) {
+  const {addItem} = useCartStore();
   const handleClick = () => {
-    alert(`Added ${product.name} to cart`);
+    addItem(product.id);
   };
 
   return (

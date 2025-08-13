@@ -85,9 +85,7 @@ export default function SearchComponent({
   // Helper: map product -> SearchResult
   const mapProduct = (p: ProductInterface): SearchResult => {
     const image =
-      (p.primary_image as ProductImage | undefined)?.url ||
-      p.images?.[0]?.url ||
-      undefined;
+      (p.primary_image as ProductImage | undefined)?.url || undefined;
 
     return {
       id: p.id,

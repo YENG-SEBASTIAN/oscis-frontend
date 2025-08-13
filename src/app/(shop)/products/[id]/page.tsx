@@ -28,7 +28,7 @@ export default function ProductDetailPage({ params }: ProductParams) {
   // Unwrap the params promise using React.use()
   const resolvedParams = React.use(params);
   const { id } = resolvedParams;
-  
+
   const {
     selectedProduct: product,
     products,
@@ -89,18 +89,19 @@ export default function ProductDetailPage({ params }: ProductParams) {
   // Fallback loading state
   if (!product) return <ProductCardSkeleton />;
 
-  // Prepare images array (primary + additional images)
-  const allImages = [
+  const allImages: ProductImage[] = [
     product.primary_image,
-    ...(product.images || [])
+    ...(product.images?.map(img => img.image) || [])
   ].filter(Boolean) as ProductImage[];
 
   const currentImage = allImages[selectedImageIndex];
 
+
+
   // Pricing info
   const price = product.price;
   const originalPrice = product.original_price;
-  const discountPercentage = product.discount_percentage || 
+  const discountPercentage = product.discount_percentage ||
     (originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0);
   const amountSaved = originalPrice ? originalPrice - price : 0;
 
@@ -121,12 +122,12 @@ export default function ProductDetailPage({ params }: ProductParams) {
                   className="object-cover"
                   priority
                 />
-                
+
                 {/* Image Navigation */}
                 {allImages.length > 1 && (
                   <>
                     <button
-                      onClick={() => setSelectedImageIndex(prev => 
+                      onClick={() => setSelectedImageIndex(prev =>
                         prev === 0 ? allImages.length - 1 : prev - 1
                       )}
                       className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
@@ -134,23 +135,22 @@ export default function ProductDetailPage({ params }: ProductParams) {
                       <ChevronLeft className="w-5 h-5" />
                     </button>
                     <button
-                      onClick={() => setSelectedImageIndex(prev => 
+                      onClick={() => setSelectedImageIndex(prev =>
                         prev === allImages.length - 1 ? 0 : prev + 1
                       )}
                       className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
                     >
                       <ChevronRight className="w-5 h-5" />
                     </button>
-                    
+
                     {/* Image Indicator */}
                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
                       {allImages.map((_, index) => (
                         <button
                           key={index}
                           onClick={() => setSelectedImageIndex(index)}
-                          className={`w-2 h-2 rounded-full transition-colors ${
-                            index === selectedImageIndex ? 'bg-white' : 'bg-white/50'
-                          }`}
+                          className={`w-2 h-2 rounded-full transition-colors ${index === selectedImageIndex ? 'bg-white' : 'bg-white/50'
+                            }`}
                         />
                       ))}
                     </div>
@@ -165,9 +165,8 @@ export default function ProductDetailPage({ params }: ProductParams) {
                     <button
                       key={index}
                       onClick={() => setSelectedImageIndex(index)}
-                      className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${
-                        index === selectedImageIndex ? 'border-blue-500' : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                      className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${index === selectedImageIndex ? 'border-blue-500' : 'border-gray-200 hover:border-gray-300'
+                        }`}
                     >
                       <Image
                         src={image.url}
@@ -202,7 +201,7 @@ export default function ProductDetailPage({ params }: ProductParams) {
                   )}
                 </div>
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
-                
+
                 {/* Rating */}
                 <div className="flex items-center space-x-2 mb-4">
                   <div className="flex items-center space-x-1">
@@ -223,7 +222,7 @@ export default function ProductDetailPage({ params }: ProductParams) {
                     </span>
                   )}
                 </div>
-                
+
                 {originalPrice && amountSaved > 0 && (
                   <div className="space-y-2">
                     <div className="flex items-center space-x-3">
