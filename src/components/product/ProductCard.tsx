@@ -74,7 +74,6 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
     return (
       <div
         ref={ref}
-        onClick={handleClick}
         className="group relative bg-white rounded-2xl shadow-lg border border-gray-100 hover:border-blue-200 overflow-hidden cursor-pointer h-full flex flex-col transition-all duration-300 hover:-translate-y-2"
         role="article"
         aria-label={`Product: ${product.name}`}

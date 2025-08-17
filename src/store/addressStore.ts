@@ -4,7 +4,7 @@ import ApiService from '@/lib/apiService';
 import { toast } from 'react-hot-toast';
 
 export interface Address {
-    id: number;
+    id: string;
     address_type?: string;
     is_default: boolean;
     recipient_name: string;

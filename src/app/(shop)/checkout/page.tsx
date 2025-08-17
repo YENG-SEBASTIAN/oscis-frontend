@@ -1,218 +1,220 @@
-'use client';
+"use client";
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import toast from 'react-hot-toast';
-import { Loader2 } from 'lucide-react';
+import { useEffect, useState, useMemo } from "react";
+import { Loader2, MapPin } from "lucide-react";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
-const checkoutSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email address"),
-  address: z.string().min(5, "Address must be at least 5 characters"),
-  city: z.string().min(2, "City is required"),
-  postalCode: z.string().min(4, "Postal code must be at least 4 characters"),
-  country: z.string().min(2, "Country is required"),
-});
-
-type CheckoutFormData = z.infer<typeof checkoutSchema>;
+import { useCartStore } from "@/store/useCartStore";
+import { useAddressStore } from "@/store/addressStore";
+import { useOrderStore } from "@/store/useOrderStore";
 
 export default function CheckoutPage() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<CheckoutFormData>({
-    resolver: zodResolver(checkoutSchema),
-  });
+  const router = useRouter();
 
-  const onSubmit = async (data: CheckoutFormData) => {
+  // Zustand stores
+  const { items, fetchCart } = useCartStore();
+  const { addresses, fetchAddresses } = useAddressStore();
+  const { checkout, loading: checkoutLoading } = useOrderStore();
+
+  // Local state
+  const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Totals
+  const subtotal = useMemo(
+    () => items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    [items]
+  );
+  const total = subtotal; // tax/shipping can be added later
+
+  // Fetch cart + addresses on mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        await Promise.all([fetchCart(), fetchAddresses()]);
+      } catch {
+        toast.error("Failed to load checkout data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [fetchCart, fetchAddresses]);
+
+  // Handle checkout
+  const handleCheckout = async () => {
+    if (!selectedAddress) {
+      toast.error("Please select a delivery address.");
+      return;
+    }
+
+    if (items.length === 0) {
+      toast.error("Your cart is empty.");
+      return;
+    }
+
     try {
-      toast.loading("Processing your order...");
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      toast.dismiss();
-      toast.success("Order placed successfully!");
-    } catch (error) {
-      toast.error("Failed to place order. Please try again.");
+      const order = await checkout({ address: selectedAddress });
+
+      if (!order) {
+        toast.error("Checkout failed - no order returned");
+        return;
+      }
+
+      // ✅ Debug logs
+      console.log("✅ Order created:", order.order_number);
+      console.log("💳 Payment Intent:", order.payment_intent_id);
+      console.log("🔑 Client secret:", order.client_secret);
+
+      // Clear old session
+      sessionStorage.removeItem("order_id");
+      sessionStorage.removeItem("stripe_client_secret");
+
+      // Save new session
+      sessionStorage.setItem("order_id", order.order_number);
+      if (order.client_secret) {
+        sessionStorage.setItem("stripe_client_secret", order.client_secret);
+
+        // Small delay ensures session is written before redirect
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        router.push("/payment");
+      } else {
+        toast.error("Payment initialization failed - missing client secret");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Checkout failed");
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2 text-center">Complete Your Purchase</h1>
-        <p className="text-gray-600 text-center mb-8">Fill in your details to proceed with checkout</p>
+  // --- UI states ---
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Loader2 className="animate-spin w-8 h-8 text-gray-500" />
+        <span className="ml-2 text-gray-600">Loading checkout...</span>
+      </div>
+    );
+  }
 
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <div className="md:flex">
-            {/* Billing Form */}
-            <div className="md:w-1/2 p-8 border-r border-gray-200">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-6">Billing Information</h2>
-              
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-                  <input
-                    {...register("name")}
-                    className={`w-full px-4 py-3 rounded-lg border ${
-                      errors.name ? 'border-red-300' : 'border-gray-300'
-                    } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition`}
-                  />
-                  {errors.name && (
-                    <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
-                  <input
-                    type="email"
-                    {...register("email")}
-                    className={`w-full px-4 py-3 rounded-lg border ${
-                      errors.email ? 'border-red-300' : 'border-gray-300'
-                    } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition`}
-                  />
-                  {errors.email && (
-                    <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Street Address *</label>
-                  <input
-                    {...register("address")}
-                    className={`w-full px-4 py-3 rounded-lg border ${
-                      errors.address ? 'border-red-300' : 'border-gray-300'
-                    } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition`}
-                  />
-                  {errors.address && (
-                    <p className="mt-1 text-sm text-red-600">{errors.address.message}</p>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">City *</label>
-                    <input
-                      {...register("city")}
-                      className={`w-full px-4 py-3 rounded-lg border ${
-                        errors.city ? 'border-red-300' : 'border-gray-300'
-                      } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition`}
-                    />
-                    {errors.city && (
-                      <p className="mt-1 text-sm text-red-600">{errors.city.message}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Postal Code *</label>
-                    <input
-                      {...register("postalCode")}
-                      className={`w-full px-4 py-3 rounded-lg border ${
-                        errors.postalCode ? 'border-red-300' : 'border-gray-300'
-                      } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition`}
-                    />
-                    {errors.postalCode && (
-                      <p className="mt-1 text-sm text-red-600">{errors.postalCode.message}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Country *</label>
-                  <input
-                    {...register("country")}
-                    className={`w-full px-4 py-3 rounded-lg border ${
-                      errors.country ? 'border-red-300' : 'border-gray-300'
-                    } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition`}
-                  />
-                  {errors.country && (
-                    <p className="mt-1 text-sm text-red-600">{errors.country.message}</p>
-                  )}
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition duration-200 flex justify-center items-center disabled:opacity-70"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="animate-spin mr-2 h-5 w-5" />
-                      Processing...
-                    </>
-                  ) : (
-                    'Complete Purchase'
-                  )}
-                </button>
-              </form>
-            </div>
-
-            {/* Order Summary */}
-            <div className="md:w-1/2 p-8 bg-gray-50">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-6">Your Order</h2>
-              
-              <div className="space-y-4 mb-6">
-                {/* Example cart items - replace with dynamic data */}
-                <div className="flex justify-between items-center pb-4 border-b border-gray-200">
-                  <div className="flex items-center">
-                    <div className="bg-gray-200 rounded-md w-16 h-16 mr-4"></div>
-                    <div>
-                      <h3 className="font-medium text-gray-800">Premium Leather Sneakers</h3>
-                      <p className="text-sm text-gray-500">Size: 42</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-gray-800">$149.99</p>
-                    <p className="text-sm text-gray-500">Qty: 1</p>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center pb-4 border-b border-gray-200">
-                  <div className="flex items-center">
-                    <div className="bg-gray-200 rounded-md w-16 h-16 mr-4"></div>
-                    <div>
-                      <h3 className="font-medium text-gray-800">Running Shoes</h3>
-                      <p className="text-sm text-gray-500">Size: 40</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-gray-800">$89.99</p>
-                    <p className="text-sm text-gray-500">Qty: 1</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3 border-t border-gray-200 pt-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">$239.98</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Shipping</span>
-                  <span className="font-medium">$9.99</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Tax</span>
-                  <span className="font-medium">$19.20</span>
-                </div>
-                <div className="flex justify-between text-lg font-bold pt-2">
-                  <span>Total</span>
-                  <span>$269.17</span>
-                </div>
-              </div>
-
-              <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-                <h3 className="font-medium text-blue-800 mb-2">Secure Checkout</h3>
-                <p className="text-sm text-blue-600">
-                  Your information is protected by 256-bit SSL encryption
-                </p>
-              </div>
-            </div>
-          </div>
+  if (items.length === 0) {
+    return (
+      <div className="max-w-lg mx-auto p-6">
+        <div className="rounded-2xl border bg-white shadow p-8 text-center">
+          <p className="text-lg font-semibold text-gray-800 mb-2">
+            Your cart is empty
+          </p>
+          <p className="text-sm text-gray-600 mb-4">
+            Add some items to your cart before proceeding to checkout.
+          </p>
+          <button
+            onClick={() => router.push("/products")}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition"
+          >
+            Continue Shopping
+          </button>
         </div>
       </div>
+    );
+  }
+
+  // --- Main checkout layout ---
+  return (
+    <div className="max-w-6xl mx-auto p-6 grid grid-cols-1 md:grid-cols-3 gap-10">
+      {/* Delivery Address */}
+      <section className="md:col-span-2 space-y-6">
+        <h2 className="text-2xl font-semibold text-gray-800">
+          Select Delivery Address
+        </h2>
+
+        {addresses.length === 0 ? (
+          <p className="text-gray-500 text-sm bg-gray-50 border p-4 rounded-lg">
+            No saved addresses found. Please add one in your account settings.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {addresses.map((addr) => (
+              <button
+                key={addr.id}
+                onClick={() => setSelectedAddress(addr.id)}
+                className={`w-full text-left relative border rounded-xl p-5 transition shadow-sm hover:shadow-md
+                  ${
+                    selectedAddress === addr.id
+                      ? "border-blue-600 bg-blue-50"
+                      : "border-gray-200 bg-white"
+                  }`}
+              >
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-blue-600 mt-1" />
+                  <div>
+                    <p className="font-medium text-gray-800">
+                      {addr.address_line1}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {addr.city}, {addr.country}
+                    </p>
+                  </div>
+                </div>
+                {selectedAddress === addr.id && (
+                  <span className="absolute top-3 right-3 text-xs bg-blue-600 text-white px-2 py-1 rounded-md">
+                    Selected
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Order Summary */}
+      <aside className="bg-white p-6 rounded-2xl shadow-lg space-y-5 border">
+        <h2 className="text-2xl font-semibold text-gray-800">Order Summary</h2>
+
+        <ul className="divide-y divide-gray-100">
+          {items.map((item) => (
+            <li
+              key={item.id}
+              className="flex justify-between py-3 text-sm text-gray-700"
+            >
+              <span>
+                {item.product.name} × {item.quantity}
+              </span>
+              <span className="font-medium">
+                ${(item.price * item.quantity).toFixed(2)}
+              </span>
+            </li>
+          ))}
+        </ul>
+
+        <div className="border-t pt-4 space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-gray-600">Subtotal</span>
+            <span className="font-medium text-gray-600">
+              ${subtotal.toFixed(2)}
+            </span>
+          </div>
+          <div className="flex justify-between text-lg font-semibold text-gray-900 border-t pt-3">
+            <span>Total</span>
+            <span>${total.toFixed(2)}</span>
+          </div>
+        </div>
+
+        <button
+          onClick={handleCheckout}
+          disabled={checkoutLoading || !selectedAddress}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-medium transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {checkoutLoading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            "Proceed to Payment"
+          )}
+        </button>
+      </aside>
     </div>
   );
 }
