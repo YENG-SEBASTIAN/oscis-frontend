@@ -1,177 +1,114 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import {
-  Elements,
-  PaymentElement,
-  useStripe,
-  useElements,
-} from "@stripe/react-stripe-js";
-import {
-  loadStripe,
-  type StripePaymentElementChangeEvent,
-} from "@stripe/stripe-js";
-import toast from "react-hot-toast";
-import { Loader2, Lock, AlertCircle } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+import { Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
-);
+import { useCartStore } from '@/store/useCartStore';
+import { useAddressStore } from '@/store/addressStore';
+import { useOrderStore } from '@/store/useOrderStore';
+import { useUserStore } from '@/store/useUserStore';
 
-export default function PaymentPage() {
+import AddressSelector from '@/components/checkout/AddressSelector';
+import PaymentMethodSelector from '@/components/checkout/PaymentMethodSelector';
+import OrderSummary from '@/components/checkout/OrderSummary';
+
+export default function CheckoutPage() {
   const router = useRouter();
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
 
-  // Load clientSecret from sessionStorage (set after order creation)
+  const { fetchCart } = useCartStore();
+  const { fetchAddresses } = useAddressStore();
+  const { checkout } = useOrderStore();
+  const { fetchUser } = useUserStore();
+
+  const [loading, setLoading] = useState(true);
+  const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'COD' | 'CARD' | null>(null);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+
   useEffect(() => {
-    const secret = sessionStorage.getItem("stripe_client_secret");
-    if (!secret) {
-      toast.error("Missing payment session. Please go back to checkout.");
-      router.push("/cart");
-    }
-    setClientSecret(secret);
+    const loadData = async () => {
+      try {
+        await Promise.all([fetchCart(), fetchAddresses(), fetchUser()]);
+      } catch {
+        toast.error('Failed to load checkout data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
   }, []);
 
-  if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
-    return (
-      <p className="text-red-600 font-medium">
-        ⚠️ Missing Stripe publishable key in <code>.env</code>
-      </p>
-    );
-  }
-
-  if (!clientSecret) {
-    return (
-      <div className="flex justify-center items-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-        <span className="ml-2 text-gray-600">Preparing payment…</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="max-w-lg mx-auto px-4 py-10">
-      <h1 className="text-2xl font-semibold mb-6 text-blue-500">
-        Secure Payment
-      </h1>
-
-      <Elements
-        stripe={stripePromise}
-        options={{
-          clientSecret,
-          appearance: { theme: "flat" },
-        }}
-      >
-        <PaymentForm />
-      </Elements>
-    </div>
-  );
-}
-
-function PaymentForm() {
-  const stripe = useStripe();
-  const elements = useElements();
-
-  const [submitting, setSubmitting] = useState(false);
-  const [formReady, setFormReady] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const orderId =
-    typeof window !== "undefined"
-      ? sessionStorage.getItem("order_id") || ""
-      : "";
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!stripe || !elements || !formReady) {
-      toast.error("Payment form is not ready yet.");
-      return;
-    }
-
-    setSubmitting(true);
+  // Handle COD and CARD checkout
+  const handleCheckout = async (method: 'COD' | 'CARD') => {
+    if (!selectedAddress) return toast.error('Please select a delivery address');
+    setCheckoutLoading(true);
     try {
-      // Validate inputs before submitting
-      const { error: submitError } = await elements.submit();
-      if (submitError) {
-        toast.error(submitError.message || "Check your card details.");
-        return;
-      }
+      const order = await checkout({ address: selectedAddress, payment_method: method });
+      if (!order) throw new Error('Failed to create order');
 
-      // Confirm payment with Stripe
-      const { error, paymentIntent } = await stripe.confirmPayment({
-        elements,
-        redirect: "if_required",
-        confirmParams: {
-          return_url: `${window.location.origin}/payment/success?order=${orderId}`,
-        },
-      });
+      setOrderId(order.order_number);
 
-      if (error) {
-        toast.error(error.message || "Payment failed. Try again.");
-        return;
-      }
-
-      // If no redirect, check status manually
-      if (
-        paymentIntent?.status === "succeeded" ||
-        paymentIntent?.status === "processing"
-      ) {
-        window.location.replace(`/payment/success?order=${orderId}`);
+      if (method === 'COD') {
+        toast.success('Order placed successfully with Cash on Delivery.');
+        router.push(`/payment/success/cod?order=${order.order_number}`);
+      } else if (method === 'CARD') {
+        if (!order.client_secret) throw new Error('Failed to initialize card payment');
+        setClientSecret(order.client_secret);
+        toast.success('Order created. Complete your card payment below.');
       }
     } catch (err: any) {
-      toast.error(err?.message || "Unexpected error.");
+      toast.error(err.message || 'Checkout failed.');
     } finally {
-      setSubmitting(false);
+      setCheckoutLoading(false);
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Error banner */}
-      {errorMessage && (
-        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-md text-red-700">
-          <AlertCircle className="w-5 h-5 shrink-0" />
-          <span>{errorMessage}</span>
-        </div>
-      )}
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-2">
+        <Loader2 className="animate-spin w-8 h-8 text-gray-500" />
+        <p className="text-gray-600">Loading checkout...</p>
+      </div>
+    );
+  }
 
-      {/* Stripe Payment Element */}
-      <div className="border rounded-lg p-4 bg-gray-50">
-        <PaymentElement
-          options={{
-            layout: "tabs",
-            paymentMethodOrder: ["card"],
-            fields: {
-              billingDetails: { name: "auto", email: "auto", address: "auto" },
-            },
-          }}
-          onReady={() => setFormReady(true)}
-          onChange={(e: StripePaymentElementChangeEvent) =>
-            setErrorMessage(e.error?.message ?? null)
-          }
-          onLoadError={(err: Error) => setErrorMessage(err.message)}
-        />
+  return (
+    <div className="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-10">
+      
+      {/* Mobile: Order Summary on top */}
+      <div className="lg:hidden mb-6">
+        <OrderSummary />
       </div>
 
-      {/* Pay button */}
-      <button
-        type="submit"
-        disabled={!stripe || !elements || submitting || !formReady}
-        className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium shadow-md disabled:opacity-60"
-      >
-        {submitting ? (
-          <Loader2 className="w-5 h-5 animate-spin" />
-        ) : (
-          <Lock className="w-5 h-5" />
-        )}
-        {submitting ? "Processing…" : "Pay Securely"}
-      </button>
+      {/* Left Section */}
+      <section className="lg:col-span-2 space-y-10">
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">1. Delivery Address</h2>
+          <AddressSelector
+            selectedAddress={selectedAddress}
+            setSelectedAddress={setSelectedAddress}
+          />
+        </div>
 
-      <p className="text-xs text-gray-500 text-center">
-        🔒 Payments are processed securely by Stripe. Your card details are
-        never stored on our servers.
-      </p>
-    </form>
+        <PaymentMethodSelector
+          selectedAddress={selectedAddress}
+          paymentMethod={paymentMethod}
+          setPaymentMethod={setPaymentMethod}
+          orderId={orderId}
+          clientSecret={clientSecret}
+          onCheckout={handleCheckout}
+          checkoutLoading={checkoutLoading}
+        />
+      </section>
+
+      {/* Right Section: Desktop */}
+      <aside className="hidden lg:block">
+        <OrderSummary />
+      </aside>
+    </div>
   );
 }
