@@ -95,20 +95,26 @@ export const usePaymentStore = create<PaymentStore>((set) => {
     // --------------------
     // Retry Stripe payment for failed orders
     // --------------------
-    retryStripePayment: async (orderNumber: string) => {
+    retryStripePayment: async (orderId: string) => {
       set({ loading: true, error: null });
+
       try {
         const data = await ApiService.post<{ client_secret: string }>(
-          '/payments/retry-stripe-payment/',
-          { order_id: orderNumber }
+          `/payments/retry-stripe-payment/${orderId}/`,
+          {} // backend already gets order_id from path, no need to send body
         );
+
         set({ loading: false });
         return data;
       } catch (err) {
-        set({ error: extractError(err, 'Retry payment failed'), loading: false });
+        set({
+          error: extractError(err, 'Retry payment failed'),
+          loading: false,
+        });
         throw err;
       }
     },
+
 
     // --------------------
     // Clear selected payment

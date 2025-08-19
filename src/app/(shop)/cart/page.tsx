@@ -25,7 +25,7 @@ export default function CartPage() {
     increaseQuantity,
     decreaseQuantity,
     clearCart,
-    getTotalItems,
+    itemsCount,
   } = useCartStore();
 
   useEffect(() => {
@@ -35,7 +35,6 @@ export default function CartPage() {
   const handleClearCart = async () => {
     try {
       await clearCart();
-      toast.success("Cart cleared successfully");
     } catch (err) {
       console.error(err);
     }
@@ -132,7 +131,7 @@ export default function CartPage() {
 
               {/* Cart Summary */}
               <CartSummary
-                totalItems={getTotalItems()}
+                totalItems={itemsCount}
                 total={total}
                 isLoading={isLoading}
                 onCheckout={handleCheckout}

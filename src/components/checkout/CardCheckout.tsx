@@ -20,7 +20,7 @@ export default function CardCheckout({ clientSecret, orderId }: Props) {
 
   return (
     <Elements stripe={stripePromise} options={{ clientSecret }}>
-      <PaymentForm clientSecret={clientSecret} orderId={orderId} paymentMethod="CARD" />
+      <PaymentForm clientSecret={clientSecret} orderId={orderId} />
     </Elements>
   );
 }

@@ -37,8 +37,8 @@ export default function AddressList() {
   } = useAddressStore();
 
   const [formOpen, setFormOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const {
     register,
@@ -87,7 +87,7 @@ export default function AddressList() {
     }
   };
 
-  const onSetDefault = async (id: number) => {
+  const onSetDefault = async (id: string) => {
     try {
       await setDefaultAddress(id);
     } catch (err) {

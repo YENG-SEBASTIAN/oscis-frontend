@@ -66,7 +66,6 @@ interface OrderState {
   fetchOrders: (params?: Record<string, any>) => Promise<Order[] | null>;
   fetchOrderById: (id: string) => Promise<Order | null>;
   checkout: (payload: CheckoutPayload) => Promise<Order>;
-  retryPayment: (orderNumber: string) => Promise<{ client_secret: string }>;
 }
 
 export const useOrderStore = create<OrderState>((set, get) => {
@@ -139,22 +138,6 @@ export const useOrderStore = create<OrderState>((set, get) => {
       }
     },
 
-    // --------------------
-    // Retry Stripe payment for failed orders
-    // --------------------
-    retryPayment: async (orderNumber) => {
-      set({ loading: true, error: null });
-      try {
-        const data = await ApiService.post<{ client_secret: string }>(
-          '/payments/retry-stripe-payment/',
-          { order_id: orderNumber }
-        );
-        set({ loading: false });
-        return data;
-      } catch (err) {
-        set({ error: extractError(err, 'Retry payment failed'), loading: false });
-        throw err;
-      }
-    },
+
   };
 });

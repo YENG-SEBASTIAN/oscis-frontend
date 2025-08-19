@@ -1,15 +1,18 @@
 'use client';
 
+import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { CheckCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-interface CODSuccessPageProps {
-  orderNumber?: string | null;
+interface PageProps {
+  searchParams: Promise<{ order?: string }>;
 }
 
-export default function CODSuccessPage({ orderNumber }: CODSuccessPageProps) {
+export default function CODSuccessPage({ searchParams }: PageProps) {
+  const resolvedSearchParams = use(searchParams);
+  const orderNumber = resolvedSearchParams?.order ?? null;
   const router = useRouter();
   const [countdown, setCountdown] = useState(5);
 
@@ -41,10 +44,13 @@ export default function CODSuccessPage({ orderNumber }: CODSuccessPageProps) {
           Order Confirmed!
         </h1>
         <p className="text-lg md:text-xl text-gray-700 mb-4">
-          Thank you! Your order <span className="font-semibold">{orderNumber}</span> has been placed successfully.
+          Thank you! Your order{' '}
+          <span className="font-semibold">{orderNumber}</span> has been placed
+          successfully.
         </p>
         <p className="text-md md:text-lg text-gray-600 mb-6 px-4">
-          <span className="font-medium text-blue-700">Please prepare cash</span> for delivery. Our delivery team will contact you shortly.
+          <span className="font-medium text-blue-700">Please prepare cash</span>{' '}
+          for delivery. Our delivery team will contact you shortly.
         </p>
 
         <div className="w-full bg-gray-200 rounded-full h-2 mb-6 overflow-hidden">
@@ -55,7 +61,9 @@ export default function CODSuccessPage({ orderNumber }: CODSuccessPageProps) {
             transition={{ duration: 5, ease: 'linear' }}
           />
         </div>
-        <p className="text-gray-500 mb-6">{countdown} second{countdown > 1 ? 's' : ''} remaining</p>
+        <p className="text-gray-500 mb-6">
+          {countdown} second{countdown > 1 ? 's' : ''} remaining
+        </p>
 
         <motion.button
           whileHover={{ scale: 1.05 }}

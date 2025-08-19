@@ -4,7 +4,7 @@ import ApiService from "@/lib/apiService";
 import toast from "react-hot-toast";
 import { ProductInterface } from "@/types/types";
 
-// Backend cart item structure (matching your Django response)
+// Backend cart item structure
 export interface BackendCartItem {
   id: string;
   product: ProductInterface;
@@ -23,7 +23,7 @@ export interface BackendCart {
   total_price: number;
 }
 
-// Frontend cart item (simplified for UI)
+// Frontend cart item
 export interface CartItem {
   id: string;
   productId: string;
@@ -37,14 +37,13 @@ export interface CartItem {
 }
 
 interface CartState {
-  // State
   items: CartItem[];
   total: number;
+  itemsCount: number;
   isLoading: boolean;
   error: string | null;
   cartId: string | null;
 
-  // Actions
   fetchCart: () => Promise<void>;
   addItem: (productId: string, quantity?: number) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
@@ -53,14 +52,11 @@ interface CartState {
   decreaseQuantity: (itemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
 
-  // Utilities
   getItemByProductId: (productId: string) => CartItem | undefined;
-  getTotalItems: () => number;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
 }
 
-// Helper function to transform backend cart item to frontend format
 const transformCartItem = (backendItem: BackendCartItem): CartItem => ({
   id: backendItem.id,
   productId: backendItem.product.id,
@@ -76,20 +72,17 @@ const transformCartItem = (backendItem: BackendCartItem): CartItem => ({
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
-      // Initial state
       items: [],
       total: 0,
+      itemsCount: 0,
       isLoading: false,
       error: null,
       cartId: null,
 
-      // Set loading state
       setLoading: (loading: boolean) => set({ isLoading: loading }),
-
-      // Set error state
       setError: (error: string | null) => set({ error }),
 
-      // Fetch cart from backend
+      // Fetch cart
       fetchCart: async () => {
         const { setLoading, setError } = get();
         try {
@@ -97,58 +90,48 @@ export const useCartStore = create<CartState>()(
           setError(null);
 
           const cart: BackendCart = await ApiService.get('/cart/');
-
           const transformedItems = cart.items.map(transformCartItem);
 
           set({
             items: transformedItems,
             total: cart.total_price,
+            itemsCount: transformedItems.reduce((sum, item) => sum + item.quantity, 0),
             cartId: cart.id,
             isLoading: false,
           });
         } catch (error: any) {
           console.error('Error fetching cart:', error);
-          setError('Failed to load cart, Your are probably logged out. Try login');
+          setError('Failed to load cart, You are probably logged out. Try login');
           set({ isLoading: false });
           toast.error('Failed to load cart');
         }
       },
 
-      // Add item to cart
+      // Add item
       addItem: async (productId: string, quantity: number = 1) => {
         const { setLoading, setError, fetchCart, items } = get();
-
         try {
           setLoading(true);
           setError(null);
 
-          // Check if product is already in cart
           const productExists = items.some(item => item.productId === productId);
           if (productExists) {
             toast.success('This product is already in your cart. The quantity will be updated');
           }
 
-          // Add or update product in cart
-          await ApiService.post('/cart/add/', {
-            product: productId,
-            quantity,
-          });
-
-          // Refresh cart state
+          await ApiService.post('/cart/add/', { product: productId, quantity });
           await fetchCart();
           toast.success('Item added to cart');
         } catch (error: any) {
-          console.error('Error adding item to cart:', error);
-          setError('Failed to add item to cart');
-          toast.error(error.response?.data?.error || 'Failed to add item to cart');
+          console.error('Error adding item:', error);
+          setError('Failed to add item');
+          toast.error(error.response?.data?.error || 'Failed to add item');
         } finally {
           setLoading(false);
         }
       },
 
-
-
-      // Remove item from cart
+      // Remove item
       removeItem: async (itemId: string) => {
         const { setLoading, setError, fetchCart } = get();
         try {
@@ -156,62 +139,46 @@ export const useCartStore = create<CartState>()(
           setError(null);
 
           await ApiService.delete(`/cart/remove/${itemId}/`);
-
-          // Refresh cart from backend
           await fetchCart();
           toast.success('Item removed from cart');
         } catch (error: any) {
-          console.error('Error removing item from cart:', error);
-          setError('Failed to remove item from cart');
+          console.error('Error removing item:', error);
+          setError('Failed to remove item');
           set({ isLoading: false });
-          toast.error(error.response?.data?.error || 'Failed to remove item from cart');
+          toast.error(error.response?.data?.error || 'Failed to remove item');
         }
       },
 
-      // Update item quantity
+      // Update quantity
       updateQuantity: async (itemId: string, quantity: number) => {
         const { setLoading, setError, fetchCart } = get();
-
-        if (quantity <= 0) {
-          // If quantity is 0 or less, remove the item
-          return get().removeItem(itemId);
-        }
+        if (quantity <= 0) return get().removeItem(itemId);
 
         try {
           setLoading(true);
           setError(null);
 
-          await ApiService.patch(`/cart/update/${itemId}/`, {
-            quantity: quantity,
-          });
-
-          // Refresh cart from backend
+          await ApiService.patch(`/cart/update/${itemId}/`, { quantity });
           await fetchCart();
         } catch (error: any) {
-          console.error('Error updating item quantity:', error);
-          setError('Failed to update item quantity');
+          console.error('Error updating quantity:', error);
+          setError('Failed to update quantity');
           set({ isLoading: false });
-          toast.error(error.response?.data?.error || 'Failed to update item quantity');
+          toast.error(error.response?.data?.error || 'Failed to update quantity');
         }
       },
 
-      // Increase quantity by 1
       increaseQuantity: async (itemId: string) => {
         const item = get().items.find(i => i.id === itemId);
-        if (item) {
-          await get().updateQuantity(itemId, item.quantity + 1);
-        }
+        if (item) await get().updateQuantity(itemId, item.quantity + 1);
       },
 
-      // Decrease quantity by 1
       decreaseQuantity: async (itemId: string) => {
         const item = get().items.find(i => i.id === itemId);
-        if (item) {
-          await get().updateQuantity(itemId, item.quantity - 1);
-        }
+        if (item) await get().updateQuantity(itemId, item.quantity - 1);
       },
 
-      // Clear entire cart
+      // Clear cart
       clearCart: async () => {
         const { setLoading, setError } = get();
         try {
@@ -219,14 +186,8 @@ export const useCartStore = create<CartState>()(
           setError(null);
 
           await ApiService.delete('/cart/clear/');
-
-          set({
-            items: [],
-            total: 0,
-            isLoading: false,
-          });
-
-          toast.success('Cart cleared');
+          set({ items: [], total: 0, itemsCount: 0, isLoading: false });
+          toast.success('Cart cleared successfully');
         } catch (error: any) {
           console.error('Error clearing cart:', error);
           setError('Failed to clear cart');
@@ -235,21 +196,15 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      // Get item by product ID
-      getItemByProductId: (productId: string) => {
-        return get().items.find(item => item.productId === productId);
-      },
-
-      // Get total number of items in cart
-      getTotalItems: () => {
-        return get().items.reduce((total, item) => total + item.quantity, 0);
-      },
+      // Utility
+      getItemByProductId: (productId: string) => get().items.find(item => item.productId === productId),
     }),
     {
-      name: 'cart-storage', // Persist cart state
+      name: 'cart-storage',
       partialize: (state) => ({
         items: state.items,
         total: state.total,
+        itemsCount: state.itemsCount,
         cartId: state.cartId,
       }),
     }

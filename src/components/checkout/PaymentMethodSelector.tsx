@@ -2,7 +2,6 @@
 
 import { Truck, CreditCard, Loader2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import toast from 'react-hot-toast';
 
 const CardCheckout = dynamic(() => import('./CardCheckout'), { ssr: false });
 
@@ -17,6 +16,7 @@ function StepCard({ selected, onClick, icon, label }: StepCardProps) {
   return (
     <button
       onClick={onClick}
+      type="button"
       className={`w-full border rounded-xl p-6 flex flex-col items-center gap-2 transition shadow-sm hover:shadow-md
         ${selected ? 'border-blue-600 ring-2 ring-blue-200 bg-blue-50' : 'border-gray-200 bg-white'}`}
     >
@@ -45,10 +45,13 @@ export default function PaymentMethodSelector({
   onCheckout,
   checkoutLoading,
 }: Props) {
+  const readyForCheckout = paymentMethod && selectedAddress;
+
   return (
     <div className="mt-6">
       <h2 className="text-2xl font-semibold text-gray-800 mb-4">2. Payment Method</h2>
 
+      {/* Method Selection */}
       <div className="grid gap-4 sm:grid-cols-2">
         <StepCard
           selected={paymentMethod === 'COD'}
@@ -60,24 +63,49 @@ export default function PaymentMethodSelector({
           selected={paymentMethod === 'CARD'}
           onClick={() => setPaymentMethod('CARD')}
           icon={<CreditCard className="w-8 h-8 text-blue-600" />}
-          label="Pre-pay with Card"
+          label="Pay with Card"
         />
       </div>
 
-      {paymentMethod && selectedAddress && (!orderId || paymentMethod === 'CARD') && (
+      {/* COD Button */}
+      {readyForCheckout && paymentMethod === 'COD' && (
         <button
-          onClick={() => onCheckout(paymentMethod)}
-          disabled={checkoutLoading || (paymentMethod === 'CARD' && clientSecret !== null)}
-          className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-medium transition shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
+          type="button"
+          onClick={() => !checkoutLoading && onCheckout('COD')}
+          disabled={checkoutLoading}
+          className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-medium transition shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {checkoutLoading ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" /> Processing...
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Processing COD...
             </>
-          ) : paymentMethod === 'COD' ? 'Place Order (COD)' : 'Proceed to Payment'}
+          ) : (
+            'Place Order (COD)'
+          )}
         </button>
       )}
 
+      {/* Card - Proceed Button (before clientSecret ready) */}
+      {readyForCheckout && paymentMethod === 'CARD' && !clientSecret && (
+        <button
+          type="button"
+          onClick={() => !checkoutLoading && onCheckout('CARD')}
+          disabled={checkoutLoading}
+          className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-medium transition shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {checkoutLoading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Initializing...
+            </>
+          ) : (
+            'Proceed to Payment'
+          )}
+        </button>
+      )}
+
+      {/* Card Checkout Form */}
       {paymentMethod === 'CARD' && orderId && clientSecret && (
         <div className="mt-6">
           <CardCheckout clientSecret={clientSecret} orderId={orderId} />
