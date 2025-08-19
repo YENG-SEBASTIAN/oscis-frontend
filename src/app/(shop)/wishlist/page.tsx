@@ -1,53 +1,32 @@
 'use client';
 
-import { useState } from 'react';
-import { Heart, HeartOff, X, ShoppingCart } from 'lucide-react';
+import { useEffect } from 'react';
+import { Heart, HeartOff } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-
-type WishlistItem = {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  inStock: boolean;
-};
+import { useWishlistStore } from '@/store/wishlistStore';
+import { ProductInterface } from '@/types/types';
 
 export default function Wishlist() {
-  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([
-    {
-      id: '1',
-      name: 'Premium Wireless Headphones',
-      price: 199.99,
-      image: '/headphones.jpg',
-      inStock: true,
-    },
-    {
-      id: '2',
-      name: 'Ultra HD Smart TV',
-      price: 899.99,
-      image: '/tv.jpg',
-      inStock: false,
-    },
-    {
-      id: '3',
-      name: 'Ergonomic Office Chair',
-      price: 249.99,
-      image: '/chair.jpg',
-      inStock: true,
-    },
-  ]);
+  const {
+    wishlist,
+    loading,
+    error,
+    fetchWishlist,
+    toggleWishlist,
+    isWishlisted,
+  } = useWishlistStore();
 
-  const removeFromWishlist = (id: string) => {
-    setWishlistItems(wishlistItems.filter(item => item.id !== id));
-    toast.success('Item removed from wishlist');
-  };
+  useEffect(() => {
+    fetchWishlist();
+  }, [fetchWishlist]);
 
-  const toggleWishlistStatus = (id: string) => {
-    setWishlistItems(wishlistItems.map(item => 
-      item.id === id ? { ...item, inStock: !item.inStock } : item
-    ));
+  const handleToggle = async (productId: string) => {
+    await toggleWishlist(productId);
+    toast.success(
+      isWishlisted(productId) ? 'Added to wishlist' : 'Removed from wishlist'
+    );
   };
 
   return (
@@ -55,14 +34,19 @@ export default function Wishlist() {
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Your Wishlist</h1>
         <div className="text-sm text-gray-600">
-          {wishlistItems.length} {wishlistItems.length === 1 ? 'item' : 'items'}
+          {wishlist.length} {wishlist.length === 1 ? 'item' : 'items'}
         </div>
       </div>
 
-      {wishlistItems.length === 0 ? (
+      {loading && <p className="text-gray-500">Loading wishlist...</p>}
+      {error && <p className="text-red-500">{error}</p>}
+
+      {wishlist.length === 0 && !loading ? (
         <div className="text-center py-12">
           <HeartOff className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-lg font-medium text-gray-900">Your wishlist is empty</h3>
+          <h3 className="mt-2 text-lg font-medium text-gray-900">
+            Your wishlist is empty
+          </h3>
           <p className="mt-1 text-sm text-gray-500">
             Start adding items you love to your wishlist
           </p>
@@ -75,66 +59,76 @@ export default function Wishlist() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
-          {wishlistItems.map((item) => (
-            <div key={item.id} className="group relative">
-              <div className="w-full aspect-w-1 aspect-h-1 bg-gray-200 rounded-lg overflow-hidden xl:aspect-w-7 xl:aspect-h-8">
-                <Image
-                  src={item.image}
-                  alt={item.name}
-                  width={300}
-                  height={300}
-                  className="w-full h-full object-center object-cover group-hover:opacity-75"
-                />
-              </div>
-              <div className="mt-4 flex justify-between">
-                <div>
-                  <h3 className="text-sm text-gray-700">
-                    <Link href={`/products/${item.id}`}>
-                      <span aria-hidden="true" className="absolute inset-0" />
-                      {item.name}
+          {wishlist.map((item) => {
+            const product: ProductInterface = item.product;
+            const wishlisted = isWishlisted(product.id);
+
+            return (
+              <div
+                key={item.id}
+                className="group relative flex flex-col bg-white rounded-lg shadow-sm overflow-hidden h-full"
+              >
+                {/* Product Image */}
+                <div className="w-full aspect-w-1 aspect-h-1 bg-gray-200 overflow-hidden">
+                  <Image
+                    src={product.primary_image?.url || ''}
+                    alt={product.name}
+                    width={300}
+                    height={300}
+                    className="w-full h-full object-cover object-center"
+                  />
+                </div>
+
+                {/* Product Info */}
+                <div className="flex-1 p-4 flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-sm text-gray-700 truncate">
+                      <Link href={`/products/${product.id}`}>{product.name}</Link>
+                    </h3>
+                    <p className="mt-1 text-lg font-medium text-gray-900">
+                      ${product.price.toFixed(2)}
+                    </p>
+                  </div>
+
+                  {/* Wishlist Toggle */}
+                  <div className="mt-4 flex justify-between items-center">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggle(product.id);
+                      }}
+                      className="flex items-center space-x-1 text-gray-400 hover:text-red-500"
+                      aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                    >
+                      {wishlisted ? (
+                        <>
+                          <Heart className="h-6 w-6 fill-red-500 text-red-500" />
+                          <span className="text-sm font-medium text-red-500">Remove</span>
+                        </>
+                      ) : (
+                        <>
+                          <HeartOff className="h-6 w-6" />
+                          <span className="text-sm font-medium">Add</span>
+                        </>
+                      )}
+                    </button>
+
+                    {/* Buy Button */}
+                    <Link
+                      href={`/products/${product.id}`}
+                      className={`ml-auto py-2 px-4 rounded-md text-white font-medium shadow-sm flex justify-center ${
+                        product.is_active
+                          ? 'bg-green-600 hover:bg-green-700'
+                          : 'bg-gray-400 cursor-not-allowed'
+                      }`}
+                    >
+                      {product.is_active ? 'Buy Now' : 'Unavailable'}
                     </Link>
-                  </h3>
-                  <p className="mt-1 text-lg font-medium text-gray-900">
-                    ${item.price.toFixed(2)}
-                  </p>
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => toggleWishlistStatus(item.id)}
-                    className="text-gray-400 hover:text-red-500"
-                    aria-label={item.inStock ? 'Remove from wishlist' : 'Add to wishlist'}
-                  >
-                    {item.inStock ? (
-                      <Heart className="h-6 w-6 fill-red-500 text-red-500" />
-                    ) : (
-                      <HeartOff className="h-6 w-6" />
-                    )}
-                  </button>
-                  <button
-                    onClick={() => removeFromWishlist(item.id)}
-                    className="text-gray-400 hover:text-gray-500"
-                    aria-label="Remove item"
-                  >
-                    <X className="h-6 w-6" />
-                  </button>
+                  </div>
                 </div>
               </div>
-              <div className="mt-4">
-                <button
-                  type="button"
-                  disabled={!item.inStock}
-                  className={`w-full flex items-center justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-                    item.inStock
-                      ? 'bg-blue-600 hover:bg-blue-700'
-                      : 'bg-gray-400 cursor-not-allowed'
-                  } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-                >
-                  <ShoppingCart className="mr-2 h-4 w-4" />
-                  {item.inStock ? 'Add to cart' : 'Out of stock'}
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

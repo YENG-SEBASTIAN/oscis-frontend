@@ -27,10 +27,6 @@ export default function ProductsPage() {
   }, [fetchProducts, currentPage]);
 
 
-  const handleAddToWishlist = (product: ProductInterface) => {
-    console.log('Added to wishlist:', product);
-  };
-
   // Pagination handlers
   const handleNext = useCallback(() => {
     if (next) {
@@ -101,7 +97,6 @@ export default function ProductsPage() {
           <>
             <ProductList
               products={products}
-              onAddToWishlist={handleAddToWishlist}
             />
             {next || previous && 
             <PaginationControls

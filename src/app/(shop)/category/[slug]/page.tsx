@@ -50,21 +50,6 @@ export default function CategoryDetailPage() {
   const productCount = products?.length || 0;
   const productCountText = `${productCount} ${productCount === 1 ? 'product' : 'products'}`;
 
-  const handleAddToCart = (product: ProductInterface) => {
-    console.log('Added to cart:', product);
-    // Add your cart logic here
-  };
-
-  const handleViewDetails = (product: ProductInterface) => {
-    console.log('View details:', product);
-    router.push(`/product/${product.slug || product.id}`);
-  };
-
-  const handleAddToWishlist = (product: ProductInterface) => {
-    console.log('Added to wishlist:', product);
-    // Add your wishlist logic here
-  };
-
   const sortedProducts = products ? [...products].sort((a, b) => {
     switch (sortBy) {
       case 'price-low':
@@ -208,7 +193,6 @@ export default function CategoryDetailPage() {
           <section>
             <ProductList
               products={sortedProducts}
-              onAddToWishlist={handleAddToWishlist}
             />
           </section>
         )}
