@@ -4,7 +4,7 @@ import ApiService from '@/lib/apiService';
 import { toast } from 'react-hot-toast';
 
 export interface Address {
-    id: number;
+    id: string;
     address_type?: string;
     is_default: boolean;
     recipient_name: string;
@@ -29,9 +29,9 @@ interface AddressStore {
     fetchAddresses: () => Promise<void>;
     fetchDefaultAddress: () => Promise<void>;
     createAddress: (data: Partial<Address>) => Promise<void>;
-    updateAddress: (id: number, data: Partial<Address>) => Promise<void>;
-    deleteAddress: (id: number) => Promise<void>;
-    setDefaultAddress: (id: number) => Promise<void>;
+    updateAddress: (id: string, data: Partial<Address>) => Promise<void>;
+    deleteAddress: (id: string) => Promise<void>;
+    setDefaultAddress: (id: string) => Promise<void>;
 }
 
 export const useAddressStore = create<AddressStore>()(
