@@ -117,7 +117,7 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
                 className="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100"
               >
                 <User size={20} className="text-black" />
-                <span className="hidden lg:block text-sm font-medium text-black">{isUserLoggedIn ? user.username : "Account"}</span>
+                <span className="hidden lg:block text-sm font-medium text-black">{isUserLoggedIn ? "Hi, " + user.username : "Account"}</span>
               </button>
 
               {isAccountMenuOpen && (

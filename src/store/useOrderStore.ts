@@ -2,13 +2,14 @@
 
 import { create } from 'zustand';
 import ApiService from '@/lib/apiService';
+import { ProductInterface } from '@/types/types';
 
 // ====================
-// Types
+// Types (unchanged except small additions)
 // ====================
 export interface OrderItem {
   id: string;
-  product: string;
+  product: ProductInterface;
   product_name: string;
   quantity: number;
   price: string;
@@ -29,7 +30,7 @@ export interface Order {
   order_number: string;
   user: string | null;
   address: string;
-  total_price: string; // backend returns string
+  total_price: string;
   order_status: string;
   payment_status: string;
   payment_method?: string;
@@ -53,68 +54,102 @@ export interface CheckoutPayload {
 }
 
 // ====================
-// Order Store
+// Store interface
 // ====================
 interface OrderState {
   orders: Order[];
+  ordersById: Record<string, Order>;
   count: number;
   next: string | null;
   previous: string | null;
-  loading: boolean;
+
+  // flags
+  loadingOrders: boolean;
+  loadingOrder: boolean;
+  checkoutLoading: boolean;
   error: string | null;
 
-  fetchOrders: (params?: Record<string, any>) => Promise<Order[] | null>;
-  fetchOrderById: (id: string) => Promise<Order | null>;
-  checkout: (payload: CheckoutPayload) => Promise<Order>;
+  // actions
+  fetchOrders: (params?: Record<string, any>, append?: boolean) => Promise<Order[] | null>;
+  fetchOrderById: (id: string, force?: boolean) => Promise<Order | null>;
+  checkout: (payload: CheckoutPayload, idempotencyKey?: string) => Promise<Order>;
+  updateOrderInStore: (order: Order) => void;
+  clearOrders: () => void;
 }
 
+// ====================
+// Implementation
+// ====================
 export const useOrderStore = create<OrderState>((set, get) => {
-  const extractError = (err: any, fallback: string) =>
-    err?.response?.data?.error ||
-    err?.response?.data?.message ||
-    err?.message ||
-    fallback;
+  let fetchCounter = 0;
+
+  const extractError = (err: any, fallback = 'Something went wrong') => {
+    if (!err) return fallback;
+    return (
+      err?.response?.data?.error ||
+      err?.response?.data?.message ||
+      err?.message ||
+      (typeof err === 'string' ? err : fallback)
+    );
+  };
 
   return {
     orders: [],
+    ordersById: {},
     count: 0,
     next: null,
     previous: null,
-    loading: false,
+
+    loadingOrders: false,
+    loadingOrder: false,
+    checkoutLoading: false,
     error: null,
 
     // --------------------
-    // Fetch all orders
+    // Fetch all orders (supports append for pagination)
     // --------------------
-    fetchOrders: async (params) => {
-      set({ loading: true, error: null });
+    fetchOrders: async (params = {}, append = false) => {
+      const thisFetch = ++fetchCounter;
+      set({ loadingOrders: true, error: null });
       try {
         const data = await ApiService.get<PaginatedOrders>('/orders/', { params });
-        set({
-          orders: data.results,
+
+        if (thisFetch !== fetchCounter) return null;
+
+        set((state) => ({
+          orders: append ? [...state.orders, ...data.results] : data.results,
+          ordersById: data.results.reduce((m, o) => ({ ...m, [o.id]: o }), append ? { ...state.ordersById } : {}),
           count: data.count,
           next: data.next,
           previous: data.previous,
-          loading: false,
-        });
+          loadingOrders: false,
+        }));
         return data.results;
       } catch (err) {
-        set({ error: extractError(err, 'Failed to fetch orders'), loading: false });
+        set({ error: extractError(err, 'Failed to fetch orders'), loadingOrders: false });
         return null;
       }
     },
 
     // --------------------
-    // Fetch a single order by ID
+    // Fetch a single order by ID (cached)
     // --------------------
-    fetchOrderById: async (id) => {
-      set({ loading: true, error: null });
+    fetchOrderById: async (id, force = false) => {
+      const cached = get().ordersById[id];
+      if (cached && !force) return cached;
+
+      set({ loadingOrder: true, error: null });
       try {
         const order = await ApiService.get<Order>(`/orders/${id}/`);
-        set({ loading: false });
+        set((state) => ({
+          loadingOrder: false,
+          ordersById: { ...state.ordersById, [order.id]: order },
+          // optionally keep orders array in sync if you want:
+          orders: state.orders.some((o) => o.id === order.id) ? state.orders.map((o) => (o.id === order.id ? order : o)) : [order, ...state.orders],
+        }));
         return order;
       } catch (err) {
-        set({ error: extractError(err, 'Failed to fetch order'), loading: false });
+        set({ error: extractError(err, 'Failed to fetch order'), loadingOrder: false });
         return null;
       }
     },
@@ -122,22 +157,46 @@ export const useOrderStore = create<OrderState>((set, get) => {
     // --------------------
     // Checkout (create a new order)
     // --------------------
-    checkout: async (payload) => {
-      set({ loading: true, error: null });
+    checkout: async (payload, idempotencyKey) => {
+      set({ checkoutLoading: true, error: null });
       try {
         const newOrder = await ApiService.post<Order>('/orders/checkout/', payload);
+
         set((state) => ({
           orders: [newOrder, ...state.orders],
+          ordersById: { ...state.ordersById, [newOrder.id]: newOrder },
           count: state.count + 1,
-          loading: false,
+          checkoutLoading: false,
         }));
+
         return newOrder;
       } catch (err) {
-        set({ error: extractError(err, 'Checkout failed'), loading: false });
-        throw err;
+        const message = extractError(err, 'Checkout failed');
+        set({ error: message, checkoutLoading: false });
+        // rethrow a normalized error so UI can catch it if needed
+        throw new Error(message);
       }
     },
 
+    // --------------------
+    // Helpers
+    // --------------------
+    updateOrderInStore: (order) => {
+      set((state) => ({
+        orders: state.orders.map((o) => (o.id === order.id ? order : o)),
+        ordersById: { ...state.ordersById, [order.id]: order },
+      }));
+    },
 
+    clearOrders: () => {
+      set({
+        orders: [],
+        ordersById: {},
+        count: 0,
+        next: null,
+        previous: null,
+        error: null,
+      });
+    },
   };
 });
