@@ -4,25 +4,23 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { ShoppingCart, Heart, Eye, Star } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 import { ProductInterface } from '@/types/types';
 import { useCartStore } from '@/store/useCartStore';
+import { useWishlistStore } from '@/store/wishlistStore';
 
-
-interface ProductActionCallbacks {
-  onAddToWishlist: (product: ProductInterface) => void;
-}
 
 interface ProductCardProps {
   product: ProductInterface;
-  onAddToWishlist: ProductActionCallbacks['onAddToWishlist'];
 }
 
 const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
-  ({ product, onAddToWishlist }, ref) => {
+  ({ product }, ref) => {
     const router = useRouter();
     const [mounted, setMounted] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
-    const {addItem} = useCartStore();
+    const { addItem } = useCartStore();
+    const { isWishlisted, toggleWishlist } = useWishlistStore();
 
     useEffect(() => setMounted(true), []);
 
@@ -46,6 +44,13 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
     ) => {
       e.stopPropagation();
       action(product);
+    };
+
+    const handleToggleWishlist = async (productId: string) => {
+      await toggleWishlist(productId);
+      toast.success(
+        isWishlisted(productId) ? 'Added to wishlist' : 'Removed from wishlist'
+      );
     };
 
     if (!mounted) {
@@ -109,11 +114,15 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
 
           <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
             <button
-              onClick={(e) => handleAction(e, onAddToWishlist)}
+              onClick={() => handleToggleWishlist(product.id)}
               className="bg-white p-2 rounded-full shadow hover:bg-red-50 hover:scale-110 transition"
               aria-label={`Add ${product.name} to wishlist`}
             >
-              <Heart size={18} className="text-gray-600 hover:text-red-500" />
+              {isWishlisted(product.id) ? (
+                <Heart size={18} className="h-6 w-6 fill-red-500 text-red-500" />
+              ) : (
+                <Heart size={18} className="h-6 w-6" />
+              )}
             </button>
             <button
               onClick={() => handleClick()}
@@ -192,11 +201,10 @@ const StarRating = ({ rating }: { rating: number }) => (
 
 interface ProductListProps {
   products: ProductInterface[];
-  onAddToWishlist: ProductActionCallbacks['onAddToWishlist'];
 }
 
 export const ProductList = React.forwardRef<HTMLDivElement, ProductListProps>(
-  ({ products, onAddToWishlist }, ref) => (
+  ({ products }, ref) => (
     <div
       ref={ref}
       className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
@@ -205,7 +213,6 @@ export const ProductList = React.forwardRef<HTMLDivElement, ProductListProps>(
         <ProductCard
           key={product.id}
           product={product}
-          onAddToWishlist={onAddToWishlist}
         />
       ))}
     </div>

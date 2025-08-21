@@ -32,6 +32,7 @@ export const AppSettings = {
     visa: 'Visa',
     mastercard: 'MasterCard',
   },
+  currency: '€'
 };
 
 
