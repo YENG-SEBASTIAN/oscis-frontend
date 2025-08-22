@@ -7,6 +7,7 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { ProductInterface } from '@/types/types';
+import { AppSettings } from '@/settings/settings';
 
 export default function Wishlist() {
   const {
@@ -20,7 +21,8 @@ export default function Wishlist() {
 
   useEffect(() => {
     fetchWishlist();
-  }, [fetchWishlist]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleToggle = async (productId: string) => {
     await toggleWishlist(productId);
@@ -31,6 +33,7 @@ export default function Wishlist() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Your Wishlist</h1>
         <div className="text-sm text-gray-600">
@@ -38,9 +41,11 @@ export default function Wishlist() {
         </div>
       </div>
 
+      {/* Loading / Error */}
       {loading && <p className="text-gray-500">Loading wishlist...</p>}
       {error && <p className="text-red-500">{error}</p>}
 
+      {/* Empty */}
       {wishlist.length === 0 && !loading ? (
         <div className="text-center py-12">
           <HeartOff className="mx-auto h-12 w-12 text-gray-400" />
@@ -52,7 +57,7 @@ export default function Wishlist() {
           </p>
           <Link
             href="/products"
-            className="mt-6 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="mt-6 inline-flex items-center px-4 py-2 rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none"
           >
             Browse Products
           </Link>
@@ -60,7 +65,20 @@ export default function Wishlist() {
       ) : (
         <div className="grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
           {wishlist.map((item) => {
-            const product: ProductInterface = item.product;
+            const product: ProductInterface | null = item.product;
+
+            // Skip items without a valid product
+            if (!product) {
+              return (
+                <div
+                  key={item.id}
+                  className="flex flex-col items-center justify-center p-6 bg-gray-50 rounded-lg shadow-sm text-gray-500"
+                >
+                  <p className="text-sm">This product is no longer available</p>
+                </div>
+              );
+            }
+
             const wishlisted = isWishlisted(product.id);
 
             return (
@@ -69,14 +87,20 @@ export default function Wishlist() {
                 className="group relative flex flex-col bg-white rounded-lg shadow-sm overflow-hidden h-full"
               >
                 {/* Product Image */}
-                <div className="w-full aspect-w-1 aspect-h-1 bg-gray-200 overflow-hidden">
-                  <Image
-                    src={product.primary_image?.url || ''}
-                    alt={product.name}
-                    width={300}
-                    height={300}
-                    className="w-full h-full object-cover object-center"
-                  />
+                <div className="w-full aspect-square bg-gray-200 overflow-hidden">
+                  {product.primary_image?.url ? (
+                    <Image
+                      src={product.primary_image.url}
+                      alt={product.name}
+                      width={300}
+                      height={300}
+                      className="w-full h-full object-cover object-center"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                      No Image
+                    </div>
+                  )}
                 </div>
 
                 {/* Product Info */}
@@ -86,11 +110,11 @@ export default function Wishlist() {
                       <Link href={`/products/${product.id}`}>{product.name}</Link>
                     </h3>
                     <p className="mt-1 text-lg font-medium text-gray-900">
-                      ${product.price.toFixed(2)}
+                      {AppSettings.currency}{product.price?.toFixed(2) ?? '0.00'}
                     </p>
                   </div>
 
-                  {/* Wishlist Toggle */}
+                  {/* Wishlist Toggle + Buy */}
                   <div className="mt-4 flex justify-between items-center">
                     <button
                       onClick={(e) => {
@@ -113,7 +137,6 @@ export default function Wishlist() {
                       )}
                     </button>
 
-                    {/* Buy Button */}
                     <Link
                       href={`/products/${product.id}`}
                       className={`ml-auto py-2 px-4 rounded-md text-white font-medium shadow-sm flex justify-center ${

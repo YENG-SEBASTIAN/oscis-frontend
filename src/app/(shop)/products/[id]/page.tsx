@@ -17,6 +17,7 @@ import { ProductCardSkeleton } from '@/components/product/ProductCardSkeleton';
 import { useProductStore } from '@/store/useProductStore';
 import type { ProductInterface, ProductFeature, ConditionGuideItem, ProductImage } from '@/types/types';
 import AddToCartButton from '@/components/cart/AddToCartButton';
+import { AppSettings } from '@/settings/settings';
 
 interface ProductParams {
   params: Promise<{
@@ -215,10 +216,10 @@ export default function ProductDetailPage({ params }: ProductParams) {
               {/* Pricing */}
               <div className="bg-gray-50 rounded-xl p-6">
                 <div className="flex items-center space-x-3 mb-3">
-                  <span className="text-4xl font-bold text-blue-600">${price.toFixed(2)}</span>
+                  <span className="text-4xl font-bold text-blue-600">{AppSettings.currency}{price.toFixed(2)}</span>
                   {originalPrice && (
                     <span className="line-through text-gray-400 text-xl">
-                      ${originalPrice.toFixed(2)}
+                      {AppSettings.currency}{originalPrice.toFixed(2)}
                     </span>
                   )}
                 </div>
@@ -230,11 +231,11 @@ export default function ProductDetailPage({ params }: ProductParams) {
                         {discountPercentage}% OFF
                       </span>
                       <span className="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full">
-                        Save ${amountSaved.toFixed(2)}
+                        Save {AppSettings.currency}{amountSaved.toFixed(2)}
                       </span>
                     </div>
                     <p className="text-sm text-gray-600">
-                      You save <span className="font-semibold text-green-600">${amountSaved.toFixed(2)}</span>
+                      You save <span className="font-semibold text-green-600">{AppSettings.currency}{amountSaved.toFixed(2)}</span>
                     </p>
                   </div>
                 )}
@@ -352,10 +353,10 @@ export default function ProductDetailPage({ params }: ProductParams) {
                             )}
                           </div>
                           <div className="flex items-center space-x-2">
-                            <span className="font-bold text-blue-600">${product.price.toFixed(2)}</span>
+                            <span className="font-bold text-blue-600">{AppSettings.currency}{product.price.toFixed(2)}</span>
                             {product.original_price && (
                               <span className="line-through text-gray-400 text-sm">
-                                ${product.original_price.toFixed(2)}
+                                {AppSettings.currency}{product.original_price.toFixed(2)}
                               </span>
                             )}
                           </div>

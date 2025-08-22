@@ -83,7 +83,6 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
             </button>
 
             {/* Wishlist */}
-            {isUserLoggedIn && (
               <Link
                 href="/wishlist"
                 className="relative p-2 rounded-full hover:bg-gray-100 group"
@@ -100,7 +99,6 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
                   </span>
                 )}
               </Link>
-            )}
 
 
 

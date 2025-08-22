@@ -4,6 +4,7 @@ import { X, Plus, Minus } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { MediaBaseUrl } from '@/lib/axios';
+import { AppSettings } from '@/settings/settings';
 
 interface CartItemProps {
   item: any;
@@ -36,7 +37,7 @@ export default function CartItem({
         <div className="flex justify-between items-start">
           <div>
             <h3 className="text-sm font-semibold text-gray-900">{item.name}</h3>
-            <p className="text-sm text-gray-500 mt-1">${item.price.toFixed(2)}</p>
+            <p className="text-sm text-gray-500 mt-1">{AppSettings.currency}{item.price.toFixed(2)}</p>
             <Link
               href={`/products/${item.productId}`}
               className="text-xs text-blue-600 hover:text-blue-700 transition"
@@ -74,7 +75,7 @@ export default function CartItem({
             </button>
           </div>
           <p className="text-sm font-bold text-gray-900">
-            ${item.total_price.toFixed(2)}
+            {AppSettings.currency}{item.total_price.toFixed(2)}
           </p>
         </div>
       </div>

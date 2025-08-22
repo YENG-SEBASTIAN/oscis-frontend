@@ -6,8 +6,6 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Lock, User as UserIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
-
-import PasswordModal from './PasswordModal';
 import { useUserStore } from '@/store/useUserStore';
 
 const profileSchema = z.object({
@@ -221,7 +219,6 @@ export default function Profile() {
         </form>
       )}
 
-      <PasswordModal isOpen={showPasswordModal} onClose={() => setShowPasswordModal(false)} />
     </div>
   );
 }
