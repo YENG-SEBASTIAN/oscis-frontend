@@ -135,9 +135,10 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
         </div>
 
         <div
-          onClick={() => handleClick()}
           className="p-6 flex flex-col">
-          <h3 className="font-bold text-lg mb-3 text-gray-800 transition-colors group-hover:text-blue-600 line-clamp-2">
+          <h3
+            onClick={() => handleClick()}
+            className="font-bold text-lg mb-3 text-gray-800 transition-colors group-hover:text-blue-600 line-clamp-2">
             {product.name}
           </h3>
 
