@@ -2,6 +2,7 @@
 
 import { ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { AppSettings } from '@/settings/settings';
 
 interface CartSummaryProps {
   totalItems: number;
@@ -21,7 +22,7 @@ export default function CartSummary({
       <h2 className="text-lg font-bold text-gray-900 mb-4">Cart Summary</h2>
       <div className="flex justify-between text-gray-700 mb-2">
         <span>Subtotal ({totalItems} items)</span>
-        <span>${total.toFixed(2)}</span>
+        <span>{AppSettings.currency}{total.toFixed(2)}</span>
       </div>
       <p className="text-sm text-gray-500 mb-6">
         Shipping and taxes calculated at checkout.
@@ -39,7 +40,7 @@ export default function CartSummary({
           </>
         ) : (
           <>
-            Checkout (${total.toFixed(2)}) <ArrowRight className="w-4 h-4" />
+            Checkout ({AppSettings.currency}{total.toFixed(2)}) <ArrowRight className="w-4 h-4" />
           </>
         )}
       </button>

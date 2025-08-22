@@ -5,6 +5,7 @@ import { ShoppingCart, Heart, Eye, Star } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { AppSettings } from '@/settings/settings';
 import { ProductInterface } from '@/types/types';
 import { useCartStore } from '@/store/useCartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
@@ -38,13 +39,6 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
 
     const handleClick = () => mounted && router.push(`/products/${product.id}`);
 
-    const handleAction = (
-      e: React.MouseEvent,
-      action: (product: ProductInterface) => void
-    ) => {
-      e.stopPropagation();
-      action(product);
-    };
 
     const handleToggleWishlist = async (productId: string) => {
       await toggleWishlist(productId);
@@ -140,7 +134,9 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
           </div>
         </div>
 
-        <div className="p-6 flex flex-col">
+        <div
+          onClick={() => handleClick()}
+          className="p-6 flex flex-col">
           <h3 className="font-bold text-lg mb-3 text-gray-800 transition-colors group-hover:text-blue-600 line-clamp-2">
             {product.name}
           </h3>
@@ -155,17 +151,17 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
           <div className="flex items-center justify-between mb-6 mt-auto">
             <div className="flex items-center gap-2">
               <span className="text-2xl font-bold text-gray-800">
-                ${isNaN(price) ? '0.00' : price.toFixed(2)}
+                {AppSettings.currency}{isNaN(price) ? '0.00' : price.toFixed(2)}
               </span>
               {hasDiscount && (
                 <span className="text-lg text-gray-400 line-through">
-                  ${isNaN(originalPrice) ? '0.00' : originalPrice.toFixed(2)}
+                  {AppSettings.currency}{isNaN(originalPrice) ? '0.00' : originalPrice.toFixed(2)}
                 </span>
               )}
             </div>
             {hasDiscount && (
               <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold">
-                Save ${discountAmount}
+                Save {AppSettings.currency}{discountAmount}
               </span>
             )}
           </div>
