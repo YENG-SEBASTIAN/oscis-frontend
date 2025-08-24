@@ -1,5 +1,7 @@
 import axios, { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
 import { getAccessToken, getRefreshToken, setAccessToken, logout } from './auth';
+import { getGuestId } from './guest';
+
 import { toast } from 'react-hot-toast';
 
 if (!process.env.NEXT_PUBLIC_MEDIA_API_BASE_URL) {
@@ -14,11 +16,18 @@ const api = axios.create({
 });
 
 api.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
+  async (config: InternalAxiosRequestConfig) => {
     const accessToken = getAccessToken();
+    const guestId = await getGuestId();
+
     if (accessToken && config.headers) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
+
+    if (guestId && config.headers) {
+      config.headers['X-Guest-ID'] = guestId;
+    }
+
     return config;
   },
   (error: AxiosError) => Promise.reject(error)
