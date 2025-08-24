@@ -4,6 +4,7 @@ import "./globals.css";
 import MainLayout from "@/components/layout/MainLayout";
 import { AppSettings } from "@/settings/settings";
 import { Toaster } from 'react-hot-toast';
+import { SessionInitializer } from "@/hooks/useInitializeSession";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,6 +40,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <MainLayout>
+          {/* Initialize session for the entire app */}
+          <SessionInitializer />
           {children}
           <Toaster position="top-right" reverseOrder={false} />
         </MainLayout>
