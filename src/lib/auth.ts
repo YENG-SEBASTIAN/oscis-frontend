@@ -1,6 +1,6 @@
 import Cookies from "js-cookie";
 import { User } from "@/types/user";
-
+import { clearGuestId } from "./guest";
 // ====================
 // Cookie Keys
 // ====================
@@ -8,6 +8,7 @@ const ACCESS_KEY = "access";
 const REFRESH_KEY = "refresh";
 const USER_KEY = "user";
 const AUTH_KEY = "isAuthenticated";
+
 
 // ====================
 // Getters
@@ -57,4 +58,5 @@ export const logout = (): void => {
   Cookies.remove(REFRESH_KEY);
   Cookies.remove(USER_KEY);
   Cookies.remove(AUTH_KEY);
+  clearGuestId();
 };
