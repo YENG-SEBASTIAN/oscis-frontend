@@ -29,7 +29,6 @@ export default function Profile() {
   } = useUserStore();
 
   const [editMode, setEditMode] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
 
   const {
@@ -123,13 +122,6 @@ export default function Profile() {
           className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500"
         >
           Update Profile
-        </button>
-        <button
-          onClick={() => setShowPasswordModal(true)}
-          className="flex items-center px-4 py-2 border border-blue-400 text-blue-600 rounded-md hover:bg-blue-50"
-        >
-          <Lock className="h-4 w-4 mr-2" />
-          Change Password
         </button>
       </div>
 

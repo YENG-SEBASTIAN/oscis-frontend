@@ -4,55 +4,29 @@ import { Bell, BellOff, Check, X, Clock, AlertTriangle } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import Link from 'next/link';
-
-type Notification = {
-  id: string;
-  title: string;
-  message: string;
-  type: 'success' | 'error' | 'warning' | 'info';
-  time: string;
-  read: boolean;
-};
+import { useNotificationStore } from '@/store/useNotificationStore';
 
 export default function NotificationCenter() {
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: '1',
-      title: 'Order Confirmed',
-      message: 'Your order #12345 has been confirmed',
-      type: 'success',
-      time: '2 mins ago',
-      read: false,
-    },
-    {
-      id: '2',
-      title: 'Payment Failed',
-      message: 'Payment for order #12346 failed. Please try again',
-      type: 'error',
-      time: '1 hour ago',
-      read: false,
-    },
-    {
-      id: '3',
-      title: 'Special Offer',
-      message: 'Get 20% off on your next purchase with code SAVE20',
-      type: 'info',
-      time: '5 hours ago',
-      read: true,
-    },
-    {
-      id: '4',
-      title: 'Shipping Update',
-      message: 'Your order will be delayed by 2-3 business days',
-      type: 'warning',
-      time: 'Yesterday',
-      read: true,
-    },
-  ]);
-
   const [isOpen, setIsOpen] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
-  const unreadCount = notifications.filter(n => !n.read).length;
+
+  // 🔗 store
+  const {
+    notifications,
+    loading,
+    error,
+    fetchNotifications,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+  } = useNotificationStore();
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  // fetch notifications on mount
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
 
   // Close notifications when clicking outside or pressing Escape
   useEffect(() => {
@@ -61,42 +35,20 @@ export default function NotificationCenter() {
         setIsOpen(false);
       }
     }
-
     function handleEscapeKey(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        setIsOpen(false);
-      }
+      if (event.key === 'Escape') setIsOpen(false);
     }
 
     document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('touchstart', handleClickOutside);
     document.addEventListener('keydown', handleEscapeKey);
-    
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-      document.addEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
       document.removeEventListener('keydown', handleEscapeKey);
     };
   }, []);
-
-  const markAsRead = (id: string) => {
-    setNotifications(notifications.map(notification =>
-      notification.id === id ? { ...notification, read: true } : notification
-    ));
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(notification => ({
-      ...notification,
-      read: true
-    })));
-    toast.success('All notifications marked as read');
-  };
-
-  const deleteNotification = (id: string) => {
-    setNotifications(notifications.filter(notification => notification.id !== id));
-    toast.success('Notification removed');
-  };
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -146,7 +98,10 @@ export default function NotificationCenter() {
               <h3 className="text-lg font-medium text-gray-900">Notifications</h3>
               {unreadCount > 0 && (
                 <button
-                  onClick={markAllAsRead}
+                  onClick={() => {
+                    markAllAsRead();
+                    toast.success('All notifications marked as read');
+                  }}
                   className="text-sm font-medium text-blue-600 hover:text-blue-500"
                 >
                   Mark all as read
@@ -156,7 +111,11 @@ export default function NotificationCenter() {
           </div>
 
           <div className="h-[calc(100vh-120px)] sm:max-h-96 overflow-y-auto">
-            {notifications.length === 0 ? (
+            {loading ? (
+              <div className="p-8 text-center text-gray-500">Loading...</div>
+            ) : error ? (
+              <div className="p-8 text-center text-red-500">Failed to load notifications</div>
+            ) : notifications.length === 0 ? (
               <div className="p-8 text-center">
                 <BellOff className="mx-auto h-10 w-10 text-gray-400" />
                 <h3 className="mt-4 text-lg font-medium text-gray-900">No notifications</h3>
@@ -167,35 +126,33 @@ export default function NotificationCenter() {
             ) : (
               <ul className="divide-y divide-gray-200">
                 {notifications.map((notification) => (
-                  <li 
-                    key={notification.id} 
-                    className="hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                  >
+                  <li key={notification.id} className="hover:bg-gray-50 active:bg-gray-100 transition-colors">
                     <div className={`px-4 py-3 ${!notification.read ? 'bg-blue-50' : ''}`}>
                       <div className="flex items-start">
-                        <div className="flex-shrink-0 pt-0.5">
-                          {getIcon(notification.type)}
-                        </div>
+                        <div className="flex-shrink-0 pt-0.5">{getIcon(notification.type)}</div>
                         <div className="ml-3 flex-1 min-w-0">
                           <div className="flex items-center justify-between">
                             <p className="text-sm font-medium text-gray-900 truncate">
                               {notification.title}
                             </p>
                             <div className="flex space-x-2 ml-2">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  markAsRead(notification.id);
-                                }}
-                                className="text-gray-400 hover:text-blue-500 p-1"
-                                aria-label="Mark as read"
-                              >
-                                <Check className="h-4 w-4" />
-                              </button>
+                              {!notification.read && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    markAsRead(notification.id);
+                                  }}
+                                  className="text-gray-400 hover:text-blue-500 p-1"
+                                  aria-label="Mark as read"
+                                >
+                                  <Check className="h-4 w-4" />
+                                </button>
+                              )}
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   deleteNotification(notification.id);
+                                  toast.success('Notification removed');
                                 }}
                                 className="text-gray-400 hover:text-red-500 p-1"
                                 aria-label="Delete notification"
@@ -204,12 +161,8 @@ export default function NotificationCenter() {
                               </button>
                             </div>
                           </div>
-                          <p className="text-sm text-gray-500 mt-1 break-words">
-                            {notification.message}
-                          </p>
-                          <p className="text-xs text-gray-400 mt-1">
-                            {notification.time}
-                          </p>
+                          <p className="text-sm text-gray-500 mt-1 break-words">{notification.message}</p>
+                          <p className="text-xs text-gray-400 mt-1">{notification.time}</p>
                         </div>
                       </div>
                     </div>

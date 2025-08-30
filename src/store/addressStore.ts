@@ -5,16 +5,16 @@ import { toast } from 'react-hot-toast';
 
 export interface Address {
     id: string;
-    address_type?: string;
-    is_default: boolean;
-    recipient_name: string;
+    user: string;
+    first_name: string;
+    last_name: string;
     phone_number: string;
-    address_line1: string;
-    address_line2?: string;
+    address_line: string;
+    house_number?: string;
     city: string;
-    state_province?: string;
     postal_code?: string;
     country: string;
+    is_default: boolean;
     additional_instructions?: string;
     full_address: string;
     created_at: string;
@@ -28,7 +28,7 @@ interface AddressStore {
 
     fetchAddresses: () => Promise<void>;
     fetchDefaultAddress: () => Promise<void>;
-    createAddress: (data: Partial<Address>) => Promise<void>;
+    createAddress: (data: Partial<Address> & { email: string }) => Promise<Address>;
     updateAddress: (id: string, data: Partial<Address>) => Promise<void>;
     deleteAddress: (id: string) => Promise<void>;
     setDefaultAddress: (id: string) => Promise<void>;
@@ -68,12 +68,14 @@ export const useAddressStore = create<AddressStore>()(
         createAddress: async (data) => {
             set({ loading: true });
             try {
-                await ApiService.post('/address/', data);
+                const newAddress = await ApiService.post<Address>('/address/', data);
                 toast.success('Address added');
+
                 await Promise.all([
                     useAddressStore.getState().fetchAddresses(),
-                    useAddressStore.getState().fetchDefaultAddress(),
                 ]);
+
+                return newAddress;
             } catch (err: any) {
                 toast.error(err.response?.data?.detail || 'Failed to add address');
                 throw err;

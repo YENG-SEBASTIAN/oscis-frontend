@@ -1,53 +1,74 @@
-"use client";
+'use client';
 
-import { MapPin } from "lucide-react";
-import { useAddressStore } from "@/store/addressStore";
-import { useUserStore } from "@/store/useUserStore";
+import { MapPin } from 'lucide-react';
+import { useState } from 'react';
+import { useAddressStore } from '@/store/addressStore';
+import CheckoutAddress, { AddressFormData } from './CheckoutAddress';
 
 interface Props {
-  selectedAddress: string | null;
-  setSelectedAddress: (id: string) => void;
+  onAddressChange: (addressId: string | null, newAddressData: AddressFormData | null) => void;
 }
 
-export default function AddressSelector({ selectedAddress, setSelectedAddress }: Props) {
+export default function AddressSelector({ onAddressChange }: Props) {
   const { addresses } = useAddressStore();
-  const { user } = useUserStore();
+  const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
+  const [showNewAddressForm, setShowNewAddressForm] = useState(addresses.length === 0);
 
-  if (addresses.length === 0) {
-    return (
-      <p className="text-gray-500 text-sm bg-gray-50 border p-4 rounded-lg">
-        No saved addresses found. Please add one in your account settings.
-      </p>
-    );
-  }
+  const handleSelectExisting = (addressId: string) => {
+    setSelectedAddress(addressId);
+    setShowNewAddressForm(false);
+    onAddressChange(addressId, null);
+  };
+
+  const handleShowNewForm = () => {
+    setSelectedAddress(null);
+    setShowNewAddressForm(true);
+    onAddressChange(null, null);
+  };
+
+  const handleNewAddressChange = (data: AddressFormData | null, isValid: boolean) => {
+    onAddressChange(null, isValid && data ? data : null);
+  };
 
   return (
     <div className="space-y-4">
-      {addresses.map((addr) => (
-        <button
-          key={addr.id}
-          onClick={() => setSelectedAddress(addr.id)}
-          className={`w-full text-left relative border rounded-xl p-5 transition shadow-sm hover:shadow-md
-            ${selectedAddress === addr.id ? "border-blue-600 bg-blue-50" : "border-gray-200 bg-white"}`}
-        >
-          <div className="flex items-start gap-3">
-            <MapPin className="w-5 h-5 text-blue-600 mt-1" />
-            <div>
-              <p className="font-medium text-gray-800">
-                {addr.recipient_name || ""}
-              </p>
-              <p className="text-sm text-gray-600">
-                {addr.country} | {addr.city} | {addr.address_line1} | {addr.phone_number}
-              </p>
-            </div>
-          </div>
-          {selectedAddress === addr.id && (
-            <span className="absolute top-3 right-3 text-xs bg-blue-600 text-white px-2 py-1 rounded-md">
-              Selected
-            </span>
+      {/* Existing addresses */}
+      {addresses.length > 0 && !showNewAddressForm && (
+        <div className="space-y-3">
+          {addresses.map(addr => (
+            <button
+              key={addr.id}
+              onClick={() => handleSelectExisting(addr.id)}
+              className={`w-full text-left border rounded-lg p-4 transition ${selectedAddress === addr.id ? 'border-blue-500 bg-blue-50' : 'border-blue-300 hover:border-blue-400'}`}
+            >
+              <div className="flex items-start gap-3">
+                <MapPin className="w-5 h-5 text-blue-600 mt-1 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-blue-600">{addr.first_name} {addr.last_name}</p>
+                  <p className="text-sm text-blue-500">{addr.address_line}, {addr.city}, {addr.postal_code}</p>
+                  <p className="text-sm text-blue-500">{addr.phone_number}</p>
+                </div>
+                {selectedAddress === addr.id && <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">Selected</span>}
+              </div>
+            </button>
+          ))}
+          <button onClick={handleShowNewForm} className="w-full text-left border-2 border-dashed border-blue-300 rounded-lg p-4 text-blue-600 hover:border-blue-400 hover:text-blue-700 transition">
+            + Add a new address
+          </button>
+        </div>
+      )}
+
+      {/* New address form */}
+      {showNewAddressForm && (
+        <div>
+          <CheckoutAddress onFormChange={handleNewAddressChange} />
+          {addresses.length > 0 && (
+            <button onClick={() => setShowNewAddressForm(false)} className="mt-3 text-sm text-blue-600 hover:text-blue-800">
+              ← Back to saved addresses
+            </button>
           )}
-        </button>
-      ))}
+        </div>
+      )}
     </div>
   );
 }

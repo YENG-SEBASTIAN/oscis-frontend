@@ -80,12 +80,12 @@ export const usePaymentStore = create<PaymentStore>((set) => {
 
       try {
         // Use the orderNumber directly in the URL
-        const data = await ApiService.get<PaymentItem>(`/payments/verify/${orderNumber}/`);
+        const data = await ApiService.get<PaymentItem>(`/payments/verify/${orderNumber}`);
 
         set({ selectedPayment: data, loading: false });
         return data;
       } catch (err: any) {
-        const errorMessage = extractError(err, 'Failed to verify payment');
+        const errorMessage = extractError(err.response.data.detail, 'Failed to verify payment');
         set({ error: errorMessage, loading: false });
         throw err;
       }

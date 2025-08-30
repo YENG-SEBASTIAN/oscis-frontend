@@ -11,7 +11,7 @@ export const AppSettings = {
   },
   contact: {
     phone: '+44 7350 292304',
-    email: 'support@shopflow.com',
+    email: 'support@oscis.co.uk',
     address: '34 Packhorse walk, Packhorse centre, HD1 2RT, Huddersfield'
   },
   socialLinks: {
@@ -32,7 +32,7 @@ export const AppSettings = {
     visa: 'Visa',
     mastercard: 'MasterCard',
   },
-  currency: '€'
+  currency: '£'
 };
 
 

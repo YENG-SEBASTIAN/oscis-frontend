@@ -28,11 +28,11 @@ export const useUserStore = create<UserStore>((set, get) => ({
   fetchUser: async () => {
     set({ loading: true, error: null });
     try {
-      const user = await ApiService.get<User>('/accounts/user/');
+      const user = await ApiService.get<User>('/accounts/users/me/');
       set({ user });
     } catch (err: any) {
       const errorMsg = err?.response?.data?.detail || 'Failed to load user data.';
-      toast.error(errorMsg);
+      console.error(errorMsg);
       clearSession();
       set({ error: errorMsg, user: null });
     } finally {
@@ -43,7 +43,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
   updateUser: async (data) => {
     set({ loading: true, error: null });
     try {
-      const updatedUser = await ApiService.patch<User>('/accounts/user/', data);
+      const updatedUser = await ApiService.patch<User>('/accounts/users/me/', data);
       set({ user: updatedUser });
     } catch (err: any) {
       const errorMsg = err?.response?.data?.detail || 'Failed to update user.';
@@ -64,7 +64,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
     if (data.avatar) formData.append('avatar', data.avatar);
 
     try {
-      const updatedUser = await ApiService.patch<User>('/accounts/user/profile/', formData, true);
+      const updatedUser = await ApiService.patch<User>('/accounts/users/profile/', formData, true);
       set({ user: updatedUser });
     } catch (err: any) {
       const errorMsg = err?.response?.data?.detail || 'Failed to update profile.';

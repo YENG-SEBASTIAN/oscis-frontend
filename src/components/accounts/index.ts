@@ -1,2 +1,2 @@
 export { default as Profile } from './Profile';
-export { default as AddressList } from './AddressList';
+export { default as AddressList } from '../address/AddressList';

@@ -3,7 +3,7 @@
 import { create } from 'zustand';
 import ApiService from '@/lib/apiService';
 import { ProductInterface } from '@/types/types';
-
+import { CustomerDetails } from '@/components/checkout/PaymentForm';
 // ====================
 // Types (unchanged except small additions)
 // ====================
@@ -36,6 +36,7 @@ export interface Order {
   payment_method?: string;
   items: OrderItem[];
   payment: Payment;
+  customer_details: CustomerDetails;
   client_secret?: string;
   payment_intent_id?: string;
   created_at: string;
@@ -50,7 +51,8 @@ export interface PaginatedOrders {
 
 export interface CheckoutPayload {
   address: string;
-  payment_method: 'COD' | 'CARD';
+  payment_method:  "CARD" | "CLEARPAY" | "APPLE_PAY" | "GOOGLE_PAY" | "KLARNA";
+  guest_session_key: string;
 }
 
 // ====================
@@ -72,7 +74,7 @@ interface OrderState {
   // actions
   fetchOrders: (params?: Record<string, any>, append?: boolean) => Promise<Order[] | null>;
   fetchOrderById: (id: string, force?: boolean) => Promise<Order | null>;
-  checkout: (payload: CheckoutPayload, idempotencyKey?: string) => Promise<Order>;
+  checkout: (payload: CheckoutPayload) => Promise<Order>;
   updateOrderInStore: (order: Order) => void;
   clearOrders: () => void;
 }
@@ -157,11 +159,21 @@ export const useOrderStore = create<OrderState>((set, get) => {
     // --------------------
     // Checkout (create a new order)
     // --------------------
-    checkout: async (payload, idempotencyKey) => {
+    checkout: async (payload) => {
       set({ checkoutLoading: true, error: null });
       try {
-        const newOrder = await ApiService.post<Order>('/orders/checkout/', payload);
+        // Ensure guest_session_key is always added if available
+        let guestId: string | null = null;
+        if (typeof window !== "undefined") {
+          guestId = localStorage.getItem("oscis_guest_id");
+        }
 
+        const requestBody: CheckoutPayload = {
+          ...payload,
+          guest_session_key: guestId || payload.guest_session_key,
+        };
+
+        const newOrder = await ApiService.post<Order>('/orders/checkout/', requestBody);
         set((state) => ({
           orders: [newOrder, ...state.orders],
           ordersById: { ...state.ordersById, [newOrder.id]: newOrder },
