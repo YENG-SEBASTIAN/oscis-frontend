@@ -9,7 +9,7 @@ import DigitalWalletCheckout from "./DigitalWalletCheckout";
 import KlarnaCheckout from "./KlarnaCheckout";
 import { PaymentFormProps } from "./PaymentForm";
 
-export type PaymentMethod = "CARD" | "CLEARPAY" | "APPLE_PAY" | "GOOGLE_PAY" | "KLARNA";
+export type PaymentMethod = "card" | "clearpay" | "apple_pay" | "google_pay" | "klarna";
 
 
 interface Props {
@@ -37,11 +37,11 @@ export default function PaymentMethodSelector({ hasValidAddress, onCheckout }: P
   };
 
   const methods: { key: PaymentMethod; label: string; icon: ReactNode }[] = [
-    { key: "CARD", label: "Credit/Debit Card", icon: <CreditCard className="w-8 h-8 text-blue-600" /> },
-    { key: "APPLE_PAY", label: "Apple Pay", icon: <Apple className="w-8 h-8 text-black" /> },
-    { key: "GOOGLE_PAY", label: "Google Pay", icon: <Smartphone className="w-8 h-8 text-green-600" /> },
-    { key: "KLARNA", label: "Klarna", icon: <ShoppingBag className="w-8 h-8 text-purple-600" /> },
-    { key: "CLEARPAY", label: "Clearpay", icon: <ShoppingBag className="w-8 h-8 text-black" /> },
+    { key: "card", label: "Credit/Debit Card", icon: <CreditCard className="w-8 h-8 text-blue-600" /> },
+    // { key: "apple_pay", label: "Apple Pay", icon: <Apple className="w-8 h-8 text-black" /> },
+    // { key: "google_pay", label: "Google Pay", icon: <Smartphone className="w-8 h-8 text-green-600" /> },
+    // { key: "klarna", label: "Klarna", icon: <ShoppingBag className="w-8 h-8 text-purple-600" /> },
+    // { key: "clearpay", label: "Clearpay", icon: <ShoppingBag className="w-8 h-8 text-black" /> },
   ];
 
   // Always show all methods; Stripe handles wallet visibility internally
@@ -109,20 +109,20 @@ export default function PaymentMethodSelector({ hasValidAddress, onCheckout }: P
       {checkoutData && selectedMethod && (
         <div className="border-t pt-6">
           <h3 className="text-lg font-medium text-blue-600 mb-4">Complete Your Payment</h3>
-          {selectedMethod === "CARD" && (
+          {selectedMethod === "card" && (
             <CardCheckout clientSecret={checkoutData.clientSecret} orderId={checkoutData.orderId} customer_details={checkoutData.customer_details}/>
           )}
-          {selectedMethod === "CLEARPAY" && (
+          {selectedMethod === "clearpay" && (
             <ClearpayCheckout clientSecret={checkoutData.clientSecret} orderId={checkoutData.orderId} />
           )}
-          {(selectedMethod === "APPLE_PAY" || selectedMethod === "GOOGLE_PAY") && (
+          {(selectedMethod === "apple_pay" || selectedMethod === "google_pay") && (
             <DigitalWalletCheckout
               clientSecret={checkoutData.clientSecret}
               orderId={checkoutData.orderId}
               method={selectedMethod}
             />
           )}
-          {selectedMethod === "KLARNA" && (
+          {selectedMethod === "klarna" && (
             <KlarnaCheckout clientSecret={checkoutData.clientSecret} orderId={checkoutData.orderId} />
           )}
         </div>

@@ -8,7 +8,7 @@ import toast from "react-hot-toast";
 interface Props {
   clientSecret: string;
   orderId: string;
-  method: "APPLE_PAY" | "GOOGLE_PAY";
+  method: "apple_pay" | "google_pay";
 }
 
 export default function DigitalWalletCheckout({ clientSecret, orderId, method }: Props) {
@@ -43,7 +43,7 @@ export default function DigitalWalletCheckout({ clientSecret, orderId, method }:
     }
   };
 
-  const Icon = method === "APPLE_PAY" ? Apple : Smartphone;
+  const Icon = method === "apple_pay" ? Apple : Smartphone;
 
   return (
     <button

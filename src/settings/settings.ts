@@ -12,7 +12,7 @@ export const AppSettings = {
   contact: {
     phone: '+44 7350 292304',
     email: 'support@oscis.co.uk',
-    address: '34 Packhorse walk, Packhorse centre, HD1 2RT, Huddersfield'
+    address: '34 Packhorse walk, Packhorse Shopping centre, HD1 2RT, Huddersfield'
   },
   socialLinks: {
     twitter: 'https://twitter.com/shopflow',

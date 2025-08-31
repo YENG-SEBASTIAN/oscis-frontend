@@ -1,3 +1,5 @@
+"use client";
+
 import { create } from "zustand";
 import ApiService from "@/lib/apiService";
 
@@ -10,6 +12,13 @@ export type Notification = {
   read: boolean;
 };
 
+export type ContactMessage = {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+};
+
 type PaginatedResponse<T> = {
   count: number;
   next: string | null;
@@ -17,14 +26,19 @@ type PaginatedResponse<T> = {
   results: T[];
 };
 
-type NotificationState = {
+interface NotificationState {
+  // Notifications
   notifications: Notification[];
   count: number;
   next: string | null;
   previous: string | null;
+
+  // Contact form
   loading: boolean;
   error: string | null;
+  success: boolean;
 
+  // Actions
   fetchNotifications: () => Promise<PaginatedResponse<Notification> | null>;
   fetchNotification: (id: string) => Promise<Notification | null>;
   createNotification: (data: Partial<Notification>) => Promise<Notification | null>;
@@ -32,7 +46,11 @@ type NotificationState = {
   deleteNotification: (id: string) => Promise<boolean>;
   markAsRead: (id: string) => Promise<boolean>;
   markAllAsRead: () => Promise<boolean>;
-};
+
+  // Contact message
+  submitMessage: (data: Partial<ContactMessage>) => Promise<{ success: boolean; error?: string }>;
+
+}
 
 export const useNotificationStore = create<NotificationState>((set, get) => ({
   notifications: [],
@@ -41,14 +59,13 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   previous: null,
   loading: false,
   error: null,
+  success: false,
 
   /** Fetch all notifications (paginated) */
   fetchNotifications: async () => {
     set({ loading: true, error: null });
     try {
-      const res = await ApiService.get<PaginatedResponse<Notification>>(
-        "/notifications/"
-      );
+      const res = await ApiService.get<PaginatedResponse<Notification>>("/notifications/");
       set({
         notifications: res.results,
         count: res.count,
@@ -58,15 +75,11 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       });
       return res;
     } catch (error: any) {
-      set({
-        loading: false,
-        error: error.message || "Failed to fetch notifications",
-      });
+      set({ loading: false, error: error.message || "Failed to fetch notifications" });
       return null;
     }
   },
 
-  /** Fetch single notification */
   fetchNotification: async (id: string) => {
     try {
       return await ApiService.get<Notification>(`/notifications/${id}/`);
@@ -76,17 +89,10 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     }
   },
 
-  /** Create notification */
   createNotification: async (data: Partial<Notification>) => {
     try {
-      const newNotification = await ApiService.post<Notification>(
-        "/notifications/",
-        data
-      );
-      set({
-        notifications: [newNotification, ...get().notifications],
-        count: get().count + 1,
-      });
+      const newNotification = await ApiService.post<Notification>("/notifications/", data);
+      set({ notifications: [newNotification, ...get().notifications], count: get().count + 1 });
       return newNotification;
     } catch (error) {
       console.error("Error creating notification:", error);
@@ -94,18 +100,10 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     }
   },
 
-  /** Update notification */
   updateNotification: async (id: string, data: Partial<Notification>) => {
     try {
-      const updated = await ApiService.patch<Notification>(
-        `/notifications/${id}/`,
-        data
-      );
-      set({
-        notifications: get().notifications.map((n) =>
-          n.id === id ? { ...n, ...updated } : n
-        ),
-      });
+      const updated = await ApiService.patch<Notification>(`/notifications/${id}/`, data);
+      set({ notifications: get().notifications.map(n => n.id === id ? { ...n, ...updated } : n) });
       return updated;
     } catch (error) {
       console.error("Error updating notification:", error);
@@ -113,14 +111,10 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     }
   },
 
-  /** Delete notification */
   deleteNotification: async (id: string) => {
     try {
       await ApiService.delete(`/notifications/${id}/`);
-      set({
-        notifications: get().notifications.filter((n) => n.id !== id),
-        count: get().count - 1,
-      });
+      set({ notifications: get().notifications.filter(n => n.id !== id), count: get().count - 1 });
       return true;
     } catch (error) {
       console.error("Error deleting notification:", error);
@@ -128,36 +122,42 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     }
   },
 
-  /** Mark a single notification as read */
   markAsRead: async (id: string) => {
     try {
       await ApiService.post(`/notifications/${id}/mark_as_read/`, {});
-      set({
-        notifications: get().notifications.map((n) =>
-          n.id === id ? { ...n, read: true } : n
-        ),
-      });
+      set({ notifications: get().notifications.map(n => n.id === id ? { ...n, read: true } : n) });
       return true;
     } catch (error) {
-      console.error("Error marking notification as read:", error);
+      console.error("Error marking as read:", error);
       return false;
     }
   },
 
-  /** Mark all notifications as read */
   markAllAsRead: async () => {
     try {
       await ApiService.post(`/notifications/mark_all_as_read/`, {});
-      set({
-        notifications: get().notifications.map((n) => ({
-          ...n,
-          read: true,
-        })),
-      });
+      set({ notifications: get().notifications.map(n => ({ ...n, read: true })) });
       return true;
     } catch (error) {
-      console.error("Error marking all notifications as read:", error);
+      console.error("Error marking all as read:", error);
       return false;
     }
   },
+
+  /** Submit a contact message */
+  submitMessage: async (data) => {
+    set({ loading: true, error: null });
+
+    try {
+      await ApiService.post("/notifications/contact/", data);
+      set({ loading: false });
+      return { success: true };
+    } catch (error: any) {
+      const message = error.response?.data?.detail || "Something went wrong";
+      set({ loading: false, error: message });
+      return { success: false, error: message };
+    }
+  },
+
+
 }));

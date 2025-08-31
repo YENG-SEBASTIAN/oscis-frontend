@@ -92,8 +92,7 @@ export default function CheckoutPage() {
 
         const order = await checkout({
           address: finalAddressId,
-          payment_method: method,
-          guest_session_key: guestId || '',
+          payment_method: method
         });
 
         if (!order?.order_number || !order.client_secret || !order.customer_details) {
