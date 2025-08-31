@@ -2,8 +2,15 @@
 
 import { useEffect } from 'react';
 import ApiService from '@/lib/apiService';
+import { useCartStore } from "@/store/useCartStore";
+import { useWishlistStore } from '@/store/wishlistStore';
+
 const GUEST_KEY = "oscis_guest_id";
 export const GuestInitializer = () => {
+
+  const {fetchCart} = useCartStore();
+  const {fetchWishlist} = useWishlistStore();
+
   useEffect(() => {
     const initGuest = async () => {
       try {
@@ -25,7 +32,9 @@ export const GuestInitializer = () => {
     };
 
     initGuest();
-  }, []);
+    fetchCart();
+    fetchWishlist();
+  }, [fetchCart, fetchWishlist]);
 
   return null;
 };

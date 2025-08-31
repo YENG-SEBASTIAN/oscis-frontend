@@ -17,29 +17,22 @@ export default function CardSuccessPage() {
   const [loading, setLoading] = useState(true);
   const [retrying, setRetrying] = useState(false);
 
+  // -----------------------------
+  // Fetch payment status on mount
+  // -----------------------------
   useEffect(() => {
     const fetchPaymentStatus = async () => {
-      const params = new URLSearchParams(window.location.search);
-      const orderNumber = params.get('order');
-
-      if (!orderNumber) {
-        toast.error('Missing order number');
-        setStatus('unknown');
-        setLoading(false);
-        return;
-      }
-
       try {
-        const data = await verifyPaymentByOrderId(orderNumber);
+        const params = new URLSearchParams(window.location.search);
+        const orderNumber = params.get('order');
 
-        if (!data || !('status' in data)) {
-          throw new Error('Invalid payment data from server');
-        }
+        if (!orderNumber) throw new Error('Missing order number');
 
-        setPayment(data);
+        const paymentData = await verifyPaymentByOrderId(orderNumber);
+        setPayment(paymentData);
 
-        // Map backend 'status' to frontend status
-        switch (data.status) {
+        // Map backend status to frontend status
+        switch (paymentData.status) {
           case 'Success':
             setStatus('succeeded');
             break;
@@ -64,8 +57,12 @@ export default function CardSuccessPage() {
     fetchPaymentStatus();
   }, [verifyPaymentByOrderId]);
 
+  // -----------------------------
+  // Retry payment if failed
+  // -----------------------------
   const handleRetry = async () => {
     if (!payment) return;
+
     setRetrying(true);
     try {
       await retryStripePayment(payment.order_number);
@@ -78,6 +75,9 @@ export default function CardSuccessPage() {
     }
   };
 
+  // -----------------------------
+  // Status messages config
+  // -----------------------------
   const messages: Record<PaymentStatus, { title: string; description: string; color: string; icon?: any }> = {
     succeeded: {
       title: 'Payment Successful! 🎉',

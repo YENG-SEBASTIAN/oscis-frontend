@@ -10,28 +10,6 @@ export default function AccountPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'profile' | 'addresses'>('profile');
 
-  // Simulated default addresses (replace with dynamic data later)
-  const initialAddresses = [
-    {
-      id: '1',
-      street: '123 Main St',
-      city: 'New York',
-      state: 'NY',
-      postalCode: '10001',
-      country: 'United States',
-      isDefault: true,
-    },
-    {
-      id: '2',
-      street: '456 Oak Ave',
-      city: 'Los Angeles',
-      state: 'CA',
-      postalCode: '90001',
-      country: 'United States',
-      isDefault: false,
-    },
-  ];
-
   // Fetch user on mount if not already present
   useEffect(() => {
     if (!user) {
