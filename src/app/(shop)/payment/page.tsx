@@ -63,7 +63,7 @@ export default function CheckoutPage() {
   // Checkout flow
   // -------------------------
   const handleCheckout = useCallback(
-    async (method: PaymentMethod) => {
+    async (method?: PaymentMethod) => {
       let finalAddressId = addressId;
 
       // 1. If user filled new address form, create it first
@@ -84,11 +84,6 @@ export default function CheckoutPage() {
       }
 
       try {
-        // Always include guest session key from localStorage if available
-        let guestId: string | null = null;
-        if (typeof window !== 'undefined') {
-          guestId = localStorage.getItem('oscis_guest_id');
-        }
 
         const order = await checkout({
           address: finalAddressId,

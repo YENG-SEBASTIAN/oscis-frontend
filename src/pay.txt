@@ -4,9 +4,9 @@ import { useState } from "react";
 import { PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { Loader2, Lock, Smartphone, CreditCard } from "lucide-react";
 import toast from "react-hot-toast";
-import type {
+import type { 
   StripeError,
-  StripePaymentElementChangeEvent
+  StripePaymentElementChangeEvent 
 } from "@stripe/stripe-js";
 
 export interface CustomerDetails {
@@ -38,7 +38,7 @@ export default function PaymentForm({ clientSecret, orderId, customer_details }:
   const handlePaymentElementChange = (event: StripePaymentElementChangeEvent) => {
     setIsFormComplete(event.complete);
     setPaymentMethodType(event.value.type || "");
-
+    
     // Clear any previous errors when user starts interacting
     if (errorMessage && !event.empty) {
       setErrorMessage(null);
@@ -65,7 +65,7 @@ export default function PaymentForm({ clientSecret, orderId, customer_details }:
 
   const getButtonText = () => {
     if (isProcessing) return "Processing...";
-
+    
     switch (paymentMethodType) {
       case "apple_pay":
         return "Pay with Apple Pay";
@@ -80,7 +80,7 @@ export default function PaymentForm({ clientSecret, orderId, customer_details }:
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+    
     if (!stripe || !elements || !isFormReady) {
       return;
     }
@@ -97,6 +97,15 @@ export default function PaymentForm({ clientSecret, orderId, customer_details }:
             billing_details: {
               name: customer_details.name || "Customer",
               email: customer_details.email || null,
+              phone: null,
+              address: {
+                country: null,
+                postal_code: null,
+                state: null,
+                city: null,
+                line1: null,
+                line2: null,
+              },
             },
           },
         },
@@ -136,7 +145,7 @@ export default function PaymentForm({ clientSecret, orderId, customer_details }:
           {paymentMethodType === "apple_pay" && (
             <>
               <div className="w-4 h-4 bg-black rounded-sm flex items-center justify-center text-white text-xs font-bold">
-                🍎
+                
               </div>
               <span>Apple Pay selected</span>
             </>
@@ -170,6 +179,47 @@ export default function PaymentForm({ clientSecret, orderId, customer_details }:
           )}
 
           <PaymentElement
+            options={{
+              layout: "tabs",
+              fields: {
+                billingDetails: {
+                  name: "never",
+                  email: "never",
+                  phone: "never",
+                  address: {
+                    country: "never",
+                    postalCode: "never",
+                    state: "never",
+                    city: "never",
+                    line1: "never",
+                    line2: "never",
+                  },
+                },
+              },
+              terms: {
+                card: "never",
+                applePay: "never",
+                googlePay: "never",
+                paypal: "never",
+                auBecsDebit: "never",
+                bancontact: "never",
+                cashapp: "never",
+                ideal: "never",
+                sepaDebit: "never",
+                sofort: "never",
+                usBankAccount: "never",
+              },
+              wallets: {
+                applePay: "auto", // Shows on Safari/iOS when available
+                googlePay: "auto", // Shows on Chrome/Android when available
+                link: "never", // Keeps "Save for faster checkout" disabled
+              },
+              // Optional: Customize wallet appearance
+              // applePay: {
+              //   buttonType: "pay",
+              //   buttonStyle: "black"
+              // }
+            }}
             onReady={handlePaymentElementReady}
             onChange={handlePaymentElementChange}
             onLoadError={handleLoadError}
@@ -188,7 +238,7 @@ export default function PaymentForm({ clientSecret, orderId, customer_details }:
           className={`
             w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-all duration-200
             ${(!stripe || !isFormReady || isProcessing)
-              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
               : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-sm hover:shadow"
             }
           `}
