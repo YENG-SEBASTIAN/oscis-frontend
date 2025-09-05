@@ -25,7 +25,6 @@ export interface Payment {
   amount: number;
   status: string;                    // "Success" | ...
   transaction_id: string | null;
-  // present in your sample payload; keep optional so TS doesn't complain when absent
   order_status?: string;
   order_id?: string;
   order_number?: string;
@@ -52,7 +51,7 @@ export interface Address {
 export type OrderStatus =
   | 'Pending'
   | 'Paid & Confirmed'
-  | 'Confirmed'           // keeping this if you sometimes emit it
+  | 'Confirmed' 
   | 'Processing'
   | 'Shipped'
   | 'Delivered'
@@ -63,14 +62,13 @@ export interface Order {
   order_number: string;
   user: string | null;
   address: Address;
-  total_price: number;             // <- number in API
+  total_price: number;
   order_status: OrderStatus;
   payment_status: string;
-  // allow both lowercase/uppercase (API uses "card")
-  payment_method?: "card" | "clearpay" | "apple_pay" | "google_pay" | "klarna";
+  payment_method?: "card" | "clearpay" | "klarna" | "google_pay";
   items: OrderItem[];
   payment: Payment;
-  customer_details?: CustomerDetails;  // <- optional (not in sample)
+  customer_details?: CustomerDetails;
   client_secret?: string;
   payment_intent_id?: string;
   created_at: string;
@@ -85,7 +83,7 @@ export interface PaginatedOrders {
 
 export interface CheckoutPayload {
   address: string;
-  payment_method: "card" | "clearpay" | "apple_pay" | "google_pay" | "klarna";
+  payment_method?: "card" | "clearpay" | "klarna";
 }
 
 // ====================
@@ -197,12 +195,11 @@ export const useOrderStore = create<OrderState>((set, get) => {
     checkout: async (payload) => {
       set({ checkoutLoading: true, error: null });
       try {
-        let guestId: string | null = null;
-        if (typeof window !== 'undefined') guestId = localStorage.getItem('oscis_guest_id');
 
         const requestBody: CheckoutPayload = {
           ...payload
         };
+        
 
         const newOrder = await ApiService.post<Order>('/orders/checkout/', requestBody);
 

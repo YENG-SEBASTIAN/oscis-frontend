@@ -5,16 +5,16 @@ import { CreditCard, ShoppingBag, Apple, Smartphone, Loader2 } from "lucide-reac
 import toast from "react-hot-toast";
 import CardCheckout from "./CardCheckout";
 import ClearpayCheckout from "./ClearpayCheckout";
-import DigitalWalletCheckout from "./DigitalWalletCheckout";
 import KlarnaCheckout from "./KlarnaCheckout";
 import { PaymentFormProps } from "./PaymentForm";
+import WalletPayment from "./WalletPayment";
 
-export type PaymentMethod = "card" | "clearpay" | "apple_pay" | "google_pay" | "klarna";
+export type PaymentMethod = "card" | "clearpay" | "klarna";
 
 
 interface Props {
   hasValidAddress: boolean;
-  onCheckout: (method: PaymentMethod) => Promise<PaymentFormProps | null>;
+  onCheckout: (method?: PaymentMethod) => Promise<PaymentFormProps | null>;
 }
 
 export default function PaymentMethodSelector({ hasValidAddress, onCheckout }: Props) {
@@ -37,12 +37,11 @@ export default function PaymentMethodSelector({ hasValidAddress, onCheckout }: P
   };
 
   const methods: { key: PaymentMethod; label: string; icon: ReactNode }[] = [
-    { key: "card", label: "Credit/Debit Card", icon: <CreditCard className="w-8 h-8 text-blue-600" /> },
-    // { key: "apple_pay", label: "Apple Pay", icon: <Apple className="w-8 h-8 text-black" /> },
-    // { key: "google_pay", label: "Google Pay", icon: <Smartphone className="w-8 h-8 text-green-600" /> },
-    // { key: "klarna", label: "Klarna", icon: <ShoppingBag className="w-8 h-8 text-purple-600" /> },
-    // { key: "clearpay", label: "Clearpay", icon: <ShoppingBag className="w-8 h-8 text-black" /> },
+    { key: "card", label: "Credit / Debit Card", icon: <CreditCard className="w-8 h-8 text-blue-600" /> },
+    { key: "klarna", label: "Klarna", icon: <ShoppingBag className="w-8 h-8 text-purple-600" /> },
+    { key: "clearpay", label: "Clearpay", icon: <ShoppingBag className="w-8 h-8 text-black" /> },
   ];
+
 
   // Always show all methods; Stripe handles wallet visibility internally
   const availableMethods = methods;
@@ -71,11 +70,10 @@ export default function PaymentMethodSelector({ hasValidAddress, onCheckout }: P
                 setSelectedMethod(key);
                 setCheckoutData(null);
               }}
-              className={`w-full border rounded-xl p-6 cursor-pointer transition hover:shadow-md relative ${
-                selectedMethod === key
-                  ? "border-green-500 bg-green-50 ring-2 ring-green-200"
-                  : "border-blue-300 bg-white"
-              }`}
+              className={`w-full border rounded-xl p-6 cursor-pointer transition hover:shadow-md relative ${selectedMethod === key
+                ? "border-green-500 bg-green-50 ring-2 ring-green-200"
+                : "border-blue-300 bg-white"
+                }`}
             >
               <div className="flex items-center gap-4">
                 {icon}
@@ -109,24 +107,31 @@ export default function PaymentMethodSelector({ hasValidAddress, onCheckout }: P
       {checkoutData && selectedMethod && (
         <div className="border-t pt-6">
           <h3 className="text-lg font-medium text-blue-600 mb-4">Complete Your Payment</h3>
+
           {selectedMethod === "card" && (
-            <CardCheckout clientSecret={checkoutData.clientSecret} orderId={checkoutData.orderId} customer_details={checkoutData.customer_details}/>
-          )}
-          {selectedMethod === "clearpay" && (
-            <ClearpayCheckout clientSecret={checkoutData.clientSecret} orderId={checkoutData.orderId} />
-          )}
-          {(selectedMethod === "apple_pay" || selectedMethod === "google_pay") && (
-            <DigitalWalletCheckout
+            <CardCheckout
               clientSecret={checkoutData.clientSecret}
               orderId={checkoutData.orderId}
-              method={selectedMethod}
+              customer_details={checkoutData.customer_details}
             />
           )}
+
+          {selectedMethod === "clearpay" && (
+            <ClearpayCheckout
+              clientSecret={checkoutData.clientSecret}
+              orderId={checkoutData.orderId}
+            />
+          )}
+
           {selectedMethod === "klarna" && (
-            <KlarnaCheckout clientSecret={checkoutData.clientSecret} orderId={checkoutData.orderId} />
+            <KlarnaCheckout
+              clientSecret={checkoutData.clientSecret}
+              orderId={checkoutData.orderId}
+            />
           )}
         </div>
       )}
+
     </div>
   );
 }
