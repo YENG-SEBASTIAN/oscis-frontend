@@ -37,7 +37,7 @@ export default function PaymentMethodSelector({ hasValidAddress, onCheckout }: P
   };
 
   const methods: { key: PaymentMethod; label: string; icon: ReactNode }[] = [
-    { key: "card", label: "Credit / Debit Card", icon: <CreditCard className="w-8 h-8 text-blue-600" /> },
+    { key: "card", label: "Credit / Debit Card / Wallet", icon: <CreditCard className="w-8 h-8 text-blue-600" /> },
     { key: "klarna", label: "Klarna", icon: <ShoppingBag className="w-8 h-8 text-purple-600" /> },
     { key: "clearpay", label: "Clearpay", icon: <ShoppingBag className="w-8 h-8 text-black" /> },
   ];

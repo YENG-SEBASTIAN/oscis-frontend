@@ -24,6 +24,10 @@ package-lock.json/
 # production
 /build
 
+# https congig
+/tmp
+/tmp*
+
 # misc
 .DS_Store
 *.pem
