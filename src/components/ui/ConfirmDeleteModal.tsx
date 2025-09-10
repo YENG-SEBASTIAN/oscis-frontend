@@ -22,7 +22,7 @@ export default function ConfirmDeleteModal({
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
-        <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none backdrop-blur">
           <Transition.Child
             as={Fragment}
             enter="transition ease-out duration-200"

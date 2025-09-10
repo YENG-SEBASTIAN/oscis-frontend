@@ -4,8 +4,6 @@ import { useState, ReactNode } from "react";
 import { CreditCard, ShoppingBag, Apple, Smartphone, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import CardCheckout from "./CardCheckout";
-import ClearpayCheckout from "./ClearpayCheckout";
-import KlarnaCheckout from "./KlarnaCheckout";
 import { PaymentFormProps } from "./PaymentForm";
 import WalletPayment from "./WalletPayment";
 
@@ -38,8 +36,8 @@ export default function PaymentMethodSelector({ hasValidAddress, onCheckout }: P
 
   const methods: { key: PaymentMethod; label: string; icon: ReactNode }[] = [
     { key: "card", label: "Credit / Debit Card / Wallet", icon: <CreditCard className="w-8 h-8 text-blue-600" /> },
-    { key: "klarna", label: "Klarna", icon: <ShoppingBag className="w-8 h-8 text-purple-600" /> },
-    { key: "afterpay_clearpay", label: "Clearpay", icon: <ShoppingBag className="w-8 h-8 text-black" /> },
+    // { key: "klarna", label: "Klarna", icon: <ShoppingBag className="w-8 h-8 text-purple-600" /> },
+    // { key: "afterpay_clearpay", label: "Clearpay", icon: <ShoppingBag className="w-8 h-8 text-black" /> },
   ];
 
 
@@ -99,7 +97,7 @@ export default function PaymentMethodSelector({ hasValidAddress, onCheckout }: P
             className="w-full py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition shadow-md bg-blue-600 hover:bg-blue-700 text-white disabled:bg-blue-400"
           >
             {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
-            {isLoading ? "Setting up payment..." : `Proceed with ${selectedMethod.replace("_", " ")}`}
+            {isLoading ? "Setting up payment..." : `Proceed with payment`}
           </button>
         </div>
       )}
@@ -116,19 +114,6 @@ export default function PaymentMethodSelector({ hasValidAddress, onCheckout }: P
             />
           )}
 
-          {selectedMethod === "afterpay_clearpay" && (
-            <ClearpayCheckout
-              clientSecret={checkoutData.clientSecret}
-              orderId={checkoutData.orderId}
-            />
-          )}
-
-          {selectedMethod === "klarna" && (
-            <KlarnaCheckout
-              clientSecret={checkoutData.clientSecret}
-              orderId={checkoutData.orderId}
-            />
-          )}
         </div>
       )}
 

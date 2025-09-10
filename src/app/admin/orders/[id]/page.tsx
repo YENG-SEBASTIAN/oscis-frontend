@@ -12,7 +12,6 @@ import { OrderStatus } from '@/store/useOrderStore';
 const ORDER_STATUSES: OrderStatus[] = [
   'Pending',
   'Paid & Confirmed',
-  'Confirmed',
   'Processing',
   'Shipped',
   'Delivered',
