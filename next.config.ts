@@ -34,7 +34,5 @@ export default nextConfig;
 //   enabledEnv: "development",
 // });
 
-// // export default nextConfig;
-
 // export default withAutoCert(nextConfig);
 

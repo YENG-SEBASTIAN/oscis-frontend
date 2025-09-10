@@ -4,15 +4,14 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Lock, User as UserIcon } from 'lucide-react';
+import { User as UserIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useUserStore } from '@/store/useUserStore';
 
 const profileSchema = z.object({
   username: z.string().min(2, "Username is required"),
-  first_name: z.string().optional(),
-  last_name: z.string().optional(),
-  phone_number: z.string().min(10, "Phone number must be at least 10 digits").optional(),
+  gender: z.string().optional(),
+  date_of_birth: z.string().optional(),
   bio: z.string().optional(),
   location: z.string().optional(),
   avatar: z.any().optional(),
@@ -23,7 +22,9 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 export default function Profile() {
   const {
     user,
+    profile,
     fetchUser,
+    fetchProfile,
     updateUser,
     updateProfile,
   } = useUserStore();
@@ -41,24 +42,27 @@ export default function Profile() {
     resolver: zodResolver(profileSchema),
   });
 
+  // Load user & profile
   useEffect(() => {
     fetchUser();
-  }, [fetchUser]);
+    fetchProfile();
+  }, [fetchUser, fetchProfile]);
 
+  // Reset form values when data loads
   useEffect(() => {
-    if (user) {
+    if (user && profile) {
       reset({
         username: user.username,
-        first_name: user.first_name || '',
-        last_name: user.last_name || '',
-        phone_number: user.phone_number || '',
-        bio: user.profile?.bio || '',
-        location: user.profile?.location || '',
+        gender: profile.gender || '',
+        date_of_birth: profile.date_of_birth || '',
+        bio: profile.bio || '',
+        location: profile.location || '',
       });
-      setPreview(user.profile?.avatar || null);
+      setPreview(profile.avatar || null);
     }
-  }, [user, reset]);
+  }, [user, profile, reset]);
 
+  // Handle avatar preview
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -68,16 +72,18 @@ export default function Profile() {
     }
   };
 
+  // Submit updated data
   const onSubmit = async (data: ProfileFormData) => {
     try {
-      const { avatar, bio, location, ...userFields } = data;
+      const { avatar, bio, location, gender, date_of_birth, ...userFields } = data;
 
       await Promise.all([
-        updateUser(userFields),
-        updateProfile({ avatar, bio, location }),
+        updateUser(userFields), // only username
+        updateProfile({ avatar, bio, location, gender, date_of_birth }),
       ]);
 
       await fetchUser();
+      await fetchProfile();
       toast.success('Profile updated successfully');
       setEditMode(false);
     } catch {
@@ -102,16 +108,12 @@ export default function Profile() {
             )}
           </div>
           <div>
-            <h3 className="text-xl font-semibold">
-              {user?.full_name}
-            </h3>
-            <p className="text-sm text-blue-500">@{user.username}</p>
-            <p className="text-sm">{user.phone_number}</p>
-            <p className="text-sm">{user.profile?.location}</p>
+            <h3 className="text-xl font-semibold">@{user.username}</h3>
+            <p className="text-sm text-blue-500">{profile?.location}</p>
           </div>
         </div>
         <div className="text-sm italic text-right text-blue-500 w-full md:w-1/2">
-          {user.profile?.bio}
+          {profile?.bio}
         </div>
       </div>
 
@@ -132,6 +134,7 @@ export default function Profile() {
           className="space-y-6 p-6 border border-blue-200 rounded-xl bg-blue-50"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Username */}
             <div>
               <label className="block text-sm font-medium text-blue-600 mb-1">Username</label>
               <input
@@ -141,31 +144,31 @@ export default function Profile() {
               {errors.username && <p className="text-sm text-red-500 mt-1">{errors.username.message}</p>}
             </div>
 
+            {/* Gender */}
             <div>
-              <label className="block text-sm font-medium text-blue-600 mb-1">Phone Number</label>
-              <input
-                {...register('phone_number')}
+              <label className="block text-sm font-medium text-blue-600 mb-1">Gender</label>
+              <select
+                {...register('gender')}
                 className="w-full px-3 py-2 border border-blue-300 rounded-md focus:ring-blue-500 focus:outline-none text-blue-700"
-              />
-              {errors.phone_number && <p className="text-sm text-red-500 mt-1">{errors.phone_number.message}</p>}
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
             </div>
 
+            {/* Date of Birth */}
             <div>
-              <label className="block text-sm font-medium text-blue-600 mb-1">First Name</label>
+              <label className="block text-sm font-medium text-blue-600 mb-1">Date of Birth</label>
               <input
-                {...register('first_name')}
+                type="date"
+                {...register('date_of_birth')}
                 className="w-full px-3 py-2 border border-blue-300 rounded-md focus:ring-blue-500 focus:outline-none text-blue-700"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-blue-600 mb-1">Last Name</label>
-              <input
-                {...register('last_name')}
-                className="w-full px-3 py-2 border border-blue-300 rounded-md focus:ring-blue-500 focus:outline-none text-blue-700"
-              />
-            </div>
-
+            {/* Bio */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-blue-600 mb-1">Bio</label>
               <textarea
@@ -174,6 +177,7 @@ export default function Profile() {
               />
             </div>
 
+            {/* Location */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-blue-600 mb-1">Location</label>
               <input
@@ -182,6 +186,7 @@ export default function Profile() {
               />
             </div>
 
+            {/* Avatar */}
             <div>
               <label className="block text-sm font-medium text-blue-600 mb-1">Avatar</label>
               <input
@@ -210,7 +215,6 @@ export default function Profile() {
           </div>
         </form>
       )}
-
     </div>
   );
 }

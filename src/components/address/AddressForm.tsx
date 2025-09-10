@@ -11,12 +11,7 @@ const addressSchema = z.object({
     email: z.string().email("Valid email is required"),
     first_name: z.string().min(1, "First name is required"),
     last_name: z.string().min(1, "Last name is required"),
-    phone_number: z
-        .string()
-        .regex(
-            /^(?:\+44\d{9,10}|0\d{10})$/,
-            "Enter a valid UK phone number, e.g. +447123456789 or 07123456789"
-        ),
+    phone_number: z.string().optional(),
     address_line: z.string().min(5, "Address line is required"),
     house_number: z.string().optional(),
     city: z.string().min(2, "City is required"),
@@ -131,11 +126,6 @@ export default function AddressForm({
                             className={`w-full border text-blue-600 px-3 py-2 rounded placeholder:text-blue-300 ${errors.phone_number ? "border-red-400" : "border-blue-300"
                                 }`}
                         />
-                        {errors.phone_number && (
-                            <p className="text-red-500 text-sm">
-                                {errors.phone_number.message}
-                            </p>
-                        )}
                     </div>
                 </div>
             </div>

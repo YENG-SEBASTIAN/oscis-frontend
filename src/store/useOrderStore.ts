@@ -1,29 +1,28 @@
-'use client';
+"use client";
 
-import { create } from 'zustand';
-import ApiService from '@/lib/apiService';
-import { CustomerDetails } from '@/components/checkout/PaymentForm';
+import { create } from "zustand";
+import ApiService from "@/lib/apiService";
+import { CustomerDetails } from "@/components/checkout/PaymentForm";
 
 // ====================
-// Types (aligned to your API)
+// Types
 // ====================
-
 export interface OrderItem {
   id: string | number;
-  product: string; // UUID
+  product: string;
   product_name: string;
-  product_image: string | null; // absolute or relative URL
+  product_image: string | null;
   quantity: number;
-  price: number;           // <- number in API
-  total_price: string;     // API sends "69.00" as string for line totals
+  price: number;
+  total_price: string;
 }
 
 export interface Payment {
   id: string;
-  provider: string;                  // "card" | "CARD" | ...
+  provider: string;
   payment_intent_id: string | null;
   amount: number;
-  status: string;                    // "Success" | ...
+  status: string;
   transaction_id: string | null;
   order_status?: string;
   order_id?: string;
@@ -49,13 +48,13 @@ export interface Address {
 }
 
 export type OrderStatus =
-  | 'Pending'
-  | 'Paid & Confirmed'
-  | 'Confirmed' 
-  | 'Processing'
-  | 'Shipped'
-  | 'Delivered'
-  | 'Cancelled';
+  | "Pending"
+  | "Paid & Confirmed"
+  | "Confirmed"
+  | "Processing"
+  | "Shipped"
+  | "Delivered"
+  | "Cancelled";
 
 export interface Order {
   id: string;
@@ -65,7 +64,7 @@ export interface Order {
   total_price: number;
   order_status: OrderStatus;
   payment_status: string;
-  payment_method?: "card" | "clearpay" | "klarna" | "google_pay";
+  payment_method?: "card" | "afterpay_clearpay" | "klarna";
   items: OrderItem[];
   payment: Payment;
   customer_details?: CustomerDetails;
@@ -83,7 +82,7 @@ export interface PaginatedOrders {
 
 export interface CheckoutPayload {
   address: string;
-  payment_method?: "card" | "clearpay" | "klarna";
+  payment_method?: "card" | "afterpay_clearpay" | "klarna";
 }
 
 // ====================
@@ -96,15 +95,25 @@ interface OrderState {
   next: string | null;
   previous: string | null;
 
+  selectedOrder: Order | null;
+  filters: Record<string, any>;
+
   loadingOrders: boolean;
   loadingOrder: boolean;
   checkoutLoading: boolean;
+  updatingOrder: boolean;
   error: string | null;
 
   fetchOrders: (params?: Record<string, any>, append?: boolean) => Promise<Order[] | null>;
   fetchOrderById: (id: string, force?: boolean) => Promise<Order | null>;
   checkout: (payload: CheckoutPayload) => Promise<Order>;
+  updateOrder: (id: string, payload: Partial<Order>) => Promise<Order | null>;
+
+  setFilters: (filters: Record<string, any>, refetch?: boolean) => void;
+  clearFilters: () => void;
+
   updateOrderInStore: (order: Order) => void;
+  setSelectedOrder: (order: Order | null) => void;
   clearOrders: () => void;
 }
 
@@ -114,13 +123,13 @@ interface OrderState {
 export const useOrderStore = create<OrderState>((set, get) => {
   let fetchCounter = 0;
 
-  const extractError = (err: any, fallback = 'Something went wrong') => {
+  const extractError = (err: any, fallback = "Something went wrong") => {
     if (!err) return fallback;
     return (
       err?.response?.data?.error ||
       err?.response?.data?.message ||
       err?.message ||
-      (typeof err === 'string' ? err : fallback)
+      (typeof err === "string" ? err : fallback)
     );
   };
 
@@ -130,21 +139,26 @@ export const useOrderStore = create<OrderState>((set, get) => {
     count: 0,
     next: null,
     previous: null,
+    selectedOrder: null,
+    filters: {},
 
     loadingOrders: false,
     loadingOrder: false,
     checkoutLoading: false,
+    updatingOrder: false,
     error: null,
 
-    // Fetch list
+    // Fetch paginated orders (with filters)
     fetchOrders: async (params = {}, append = false) => {
       const thisFetch = ++fetchCounter;
       set({ loadingOrders: true, error: null });
 
-      try {
-        const data = await ApiService.get<PaginatedOrders>('/orders/', { params });
+      const mergedParams = { ...get().filters, ...params };
 
-        if (thisFetch !== fetchCounter) return null; // stale
+      try {
+        const data = await ApiService.get<PaginatedOrders>("/orders/", { params: mergedParams });
+
+        if (thisFetch !== fetchCounter) return null; // prevent stale overwrites
 
         set((state) => {
           const mergedById = append ? { ...state.ordersById } : {};
@@ -162,15 +176,18 @@ export const useOrderStore = create<OrderState>((set, get) => {
 
         return data.results;
       } catch (err) {
-        set({ error: extractError(err, 'Failed to fetch orders'), loadingOrders: false });
+        set({ error: extractError(err, "Failed to fetch orders"), loadingOrders: false });
         return null;
       }
     },
 
-    // Fetch single (cached)
+    // Fetch a single order (cached unless forced)
     fetchOrderById: async (id, force = false) => {
       const cached = get().ordersById[id];
-      if (cached && !force) return cached;
+      if (cached && !force) {
+        set({ selectedOrder: cached });
+        return cached;
+      }
 
       set({ loadingOrder: true, error: null });
       try {
@@ -182,26 +199,21 @@ export const useOrderStore = create<OrderState>((set, get) => {
           orders: state.orders.some((o) => o.id === order.id)
             ? state.orders.map((o) => (o.id === order.id ? order : o))
             : [order, ...state.orders],
+          selectedOrder: order,
         }));
 
         return order;
       } catch (err) {
-        set({ error: extractError(err, 'Failed to fetch order'), loadingOrder: false });
+        set({ error: extractError(err, "Failed to fetch order"), loadingOrder: false });
         return null;
       }
     },
 
-    // Checkout
+    // Checkout (create order)
     checkout: async (payload) => {
       set({ checkoutLoading: true, error: null });
       try {
-
-        const requestBody: CheckoutPayload = {
-          ...payload
-        };
-        
-
-        const newOrder = await ApiService.post<Order>('/orders/checkout/', requestBody);
+        const newOrder = await ApiService.post<Order>("/orders/checkout/", payload);
 
         set((state) => ({
           orders: [newOrder, ...state.orders],
@@ -212,18 +224,57 @@ export const useOrderStore = create<OrderState>((set, get) => {
 
         return newOrder;
       } catch (err) {
-        const message = extractError(err, 'Checkout failed');
+        const message = extractError(err, "Checkout failed");
         set({ error: message, checkoutLoading: false });
         throw new Error(message);
       }
     },
 
-    // Helpers
+    // Update an order
+    updateOrder: async (id, payload) => {
+      set({ updatingOrder: true, error: null });
+      try {
+        const updatedOrder = await ApiService.patch<Order>(`/orders/${id}/update/`, payload);
+
+        set((state) => ({
+          updatingOrder: false,
+          orders: state.orders.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)),
+          ordersById: { ...state.ordersById, [updatedOrder.id]: updatedOrder },
+          selectedOrder: state.selectedOrder?.id === updatedOrder.id ? updatedOrder : state.selectedOrder,
+        }));
+
+        return updatedOrder;
+      } catch (err) {
+        const message = extractError(err, "Failed to update order");
+        set({ error: message, updatingOrder: false });
+        return null;
+      }
+    },
+
+    // Manage filters
+    setFilters: (filters, refetch = true) => {
+      set({ filters });
+      if (refetch) {
+        get().fetchOrders(filters);
+      }
+    },
+
+    clearFilters: () => {
+      set({ filters: {} });
+      get().fetchOrders({});
+    },
+
+    // Local store updates
     updateOrderInStore: (order) => {
       set((state) => ({
         orders: state.orders.map((o) => (o.id === order.id ? order : o)),
         ordersById: { ...state.ordersById, [order.id]: order },
+        selectedOrder: state.selectedOrder?.id === order.id ? order : state.selectedOrder,
       }));
+    },
+
+    setSelectedOrder: (order) => {
+      set({ selectedOrder: order });
     },
 
     clearOrders: () => {
@@ -233,6 +284,8 @@ export const useOrderStore = create<OrderState>((set, get) => {
         count: 0,
         next: null,
         previous: null,
+        selectedOrder: null,
+        filters: {},
         error: null,
       });
     },

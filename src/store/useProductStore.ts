@@ -99,7 +99,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
     set({ isCreating: true, error: null });
     try {
       const newProduct = await ApiService.post<ProductInterface>(
-        '/products/',
+        '/products/create/',
         product,
         true // multipart/form-data
       );
@@ -123,8 +123,8 @@ export const useProductStore = create<ProductState>((set, get) => ({
   updateProduct: async (id, product) => {
     set({ isUpdating: true, error: null });
     try {
-      const updatedProduct = await ApiService.put<ProductInterface>(
-        `/products/${id}/`,
+      const updatedProduct = await ApiService.patch<ProductInterface>(
+        `/products/${id}/update/`,
         product,
         true // multipart/form-data
       );
@@ -151,7 +151,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
   deleteProduct: async (id) => {
     set({ isDeleting: true, error: null });
     try {
-      await ApiService.delete(`/products/${id}/`);
+      await ApiService.delete(`/products/${id}/delete/`);
       set(
         produce((state: ProductState) => {
           state.products = state.products.filter((p) => p.id !== id);

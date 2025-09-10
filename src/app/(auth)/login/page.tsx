@@ -93,16 +93,24 @@ export default function LoginPage() {
 
   // Step 2: Verify code
   const onCodeSubmit = async (data: CodeData) => {
-    const toastId = toast.loading('Verifying...');
+    const toastId = toast.loading("Verifying...");
     try {
-      await verifyLoginCode(email, data.code);
-      router.push('/');
+      const response = await verifyLoginCode(email, data.code);
+
+      // Check if the response includes user info with is_staff
+      if (response?.user?.is_staff) {
+        router.push("/admin");
+      } else {
+        router.push("/");
+      }
     } catch (error: any) {
-      console.log(error?.message || 'Invalid code');
+      console.error(error?.message || "Invalid code");
+      toast.error("Invalid code. Please try again.");
     } finally {
       toast.dismiss(toastId);
     }
   };
+
 
   // Paste from clipboard
   const handlePasteCode = async () => {
@@ -162,9 +170,8 @@ export default function LoginPage() {
                   type="email"
                   autoComplete="email"
                   {...registerEmail('email')}
-                  className={`block w-full pl-10 pr-3 py-2.5 rounded-md border ${
-                    emailErrors.email ? 'border-red-400' : 'border-gray-300'
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900`}
+                  className={`block w-full pl-10 pr-3 py-2.5 rounded-md border ${emailErrors.email ? 'border-red-400' : 'border-gray-300'
+                    } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900`}
                   placeholder="you@example.com"
                 />
               </div>
@@ -202,9 +209,8 @@ export default function LoginPage() {
                   onInput={(e) => {
                     e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '');
                   }}
-                  className={`block w-full pl-10 pr-12 py-2.5 rounded-md border ${
-                    codeErrors.code ? 'border-red-400' : 'border-gray-300'
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 tracking-widest text-center font-mono`}
+                  className={`block w-full pl-10 pr-12 py-2.5 rounded-md border ${codeErrors.code ? 'border-red-400' : 'border-gray-300'
+                    } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 tracking-widest text-center font-mono`}
                   placeholder="123456"
                 />
                 <button

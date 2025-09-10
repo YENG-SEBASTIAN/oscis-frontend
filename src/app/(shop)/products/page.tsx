@@ -98,17 +98,17 @@ export default function ProductsPage() {
             <ProductList
               products={products}
             />
-            {next || previous && 
-            <PaginationControls
-              count={count}
-              currentCount={products.length}
-              next={next}
-              previous={previous}
-              isLoading={isLoading}
-              onNext={handleNext}
-              onPrev={handlePrev}
-              itemLabel="products"
-            />
+            {(next || previous) &&
+              <PaginationControls
+                count={count}
+                currentCount={products.length}
+                next={next}
+                previous={previous}
+                isLoading={isLoading}
+                onNext={handleNext}
+                onPrev={handlePrev}
+                itemLabel="products"
+              />
             }
           </>
         )}

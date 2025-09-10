@@ -1,14 +1,15 @@
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import ApiService from '@/lib/apiService';
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
+import ApiService from "@/lib/apiService";
 import { ImageInterface } from '@/types/types';
+
 
 export interface Category {
   id: string;
   name: string;
   slug: string;
   description: string;
-  image: ImageInterface;
+  image: ImageInterface | null;
   alt_text: string;
   display_order: number;
   is_active: boolean;
@@ -33,8 +34,8 @@ interface CategoryStore {
   previous: string | null;
 
   fetchCategories: (params?: Record<string, any>) => Promise<void>;
-  createCategory: (data: Partial<Category>) => Promise<void>;
-  updateCategory: (id: string, data: Partial<Category>) => Promise<void>;
+  createCategory: (data: FormData) => Promise<void>;
+  updateCategory: (id: string, data: FormData) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
 }
 
@@ -50,7 +51,7 @@ export const useCategoryStore = create<CategoryStore>()(
     fetchCategories: async (params = {}) => {
       set({ isLoading: true, error: null });
       try {
-        const response = await ApiService.get<CategoryAPIResponse>('/categories/', { params });
+        const response = await ApiService.get<CategoryAPIResponse>("/categories/", { params });
 
         set({
           categories: response.results ?? [],
@@ -60,53 +61,53 @@ export const useCategoryStore = create<CategoryStore>()(
           isLoading: false,
         });
       } catch (error: any) {
-        console.error('Error fetching categories:', error);
+        console.error("Error fetching categories:", error);
         set({
-          error: error?.response?.data?.detail || 'Failed to load categories',
+          error: error?.response?.data?.detail || "Failed to load categories",
           isLoading: false,
         });
       }
     },
 
-    createCategory: async (data) => {
+    createCategory: async (data: FormData) => {
       set({ isLoading: true, error: null });
       try {
-        await ApiService.post('/categories/', data);
+        await ApiService.post("/categories/", data, true); // multipart/form-data
         await get().fetchCategories();
       } catch (error: any) {
-        console.error('Error creating category:', error);
+        console.error("Error creating category:", error);
         set({
-          error: error?.response?.data?.detail || 'Failed to create category',
+          error: error?.response?.data?.detail || "Failed to create category",
         });
       } finally {
         set({ isLoading: false });
       }
     },
 
-    updateCategory: async (id, data) => {
+    updateCategory: async (id: string, data: FormData) => {
       set({ isLoading: true, error: null });
       try {
-        await ApiService.patch(`/categories/${id}/`, data);
+        await ApiService.patch(`/categories/${id}/`, data, true); // multipart/form-data
         await get().fetchCategories();
       } catch (error: any) {
-        console.error('Error updating category:', error);
+        console.error("Error updating category:", error);
         set({
-          error: error?.response?.data?.detail || 'Failed to update category',
+          error: error?.response?.data?.detail || "Failed to update category",
         });
       } finally {
         set({ isLoading: false });
       }
     },
 
-    deleteCategory: async (id) => {
+    deleteCategory: async (id: string) => {
       set({ isLoading: true, error: null });
       try {
         await ApiService.delete(`/categories/${id}/`);
         await get().fetchCategories();
       } catch (error: any) {
-        console.error('Error deleting category:', error);
+        console.error("Error deleting category:", error);
         set({
-          error: error?.response?.data?.detail || 'Failed to delete category',
+          error: error?.response?.data?.detail || "Failed to delete category",
         });
       } finally {
         set({ isLoading: false });
@@ -114,5 +115,3 @@ export const useCategoryStore = create<CategoryStore>()(
     },
   }))
 );
-
-

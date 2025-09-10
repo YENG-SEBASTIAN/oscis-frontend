@@ -27,7 +27,7 @@ export default function WalletPayment({ clientSecret, orderId }: WalletPaymentPr
     },
     paymentMethods: {
       googlePay: "always",
-      applePay: "auto",
+      applePay: "always",
     },
   };
 
