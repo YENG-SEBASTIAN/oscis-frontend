@@ -11,16 +11,9 @@ export type UserProfile = {
 };
 
 export type User = {
-  id: string;
-  email: string;
-  username: string;
-  first_name: string | null;
-  last_name: string | null;
-  full_name: string;
-  short_name: string;
-  phone_number: string | null;
-  is_active: boolean;
-  profile: UserProfile;
-  created_at: string;
-  updated_at: string;
+    id: string;
+    email: string;
+    username: string;
+    is_active: boolean;
+    is_staff: boolean;
 };

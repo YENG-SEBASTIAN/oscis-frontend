@@ -100,10 +100,8 @@ export const useCartStore = create<CartState>()(
             isLoading: false,
           });
         } catch (error: any) {
-          console.error('Error fetching cart:', error);
           setError('Failed to load cart, You are probably logged out. Try login');
           set({ isLoading: false });
-          toast.error('Failed to load cart');
         }
       },
 

@@ -9,7 +9,7 @@ import KlarnaCheckout from "./KlarnaCheckout";
 import { PaymentFormProps } from "./PaymentForm";
 import WalletPayment from "./WalletPayment";
 
-export type PaymentMethod = "card" | "clearpay" | "klarna";
+export type PaymentMethod = "card" | "afterpay_clearpay" | "klarna";
 
 
 interface Props {
@@ -39,7 +39,7 @@ export default function PaymentMethodSelector({ hasValidAddress, onCheckout }: P
   const methods: { key: PaymentMethod; label: string; icon: ReactNode }[] = [
     { key: "card", label: "Credit / Debit Card / Wallet", icon: <CreditCard className="w-8 h-8 text-blue-600" /> },
     { key: "klarna", label: "Klarna", icon: <ShoppingBag className="w-8 h-8 text-purple-600" /> },
-    { key: "clearpay", label: "Clearpay", icon: <ShoppingBag className="w-8 h-8 text-black" /> },
+    { key: "afterpay_clearpay", label: "Clearpay", icon: <ShoppingBag className="w-8 h-8 text-black" /> },
   ];
 
 
@@ -116,7 +116,7 @@ export default function PaymentMethodSelector({ hasValidAddress, onCheckout }: P
             />
           )}
 
-          {selectedMethod === "clearpay" && (
+          {selectedMethod === "afterpay_clearpay" && (
             <ClearpayCheckout
               clientSecret={checkoutData.clientSecret}
               orderId={checkoutData.orderId}

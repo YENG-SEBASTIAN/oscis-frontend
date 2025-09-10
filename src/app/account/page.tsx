@@ -28,7 +28,7 @@ export default function AccountPage() {
   if (!user) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <p className="text-blue-600 text-lg">Redirecting to login...</p>
+        <p className="text-blue-600 text-lg">Redirecting...</p>
       </div>
     );
   }

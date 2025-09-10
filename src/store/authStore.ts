@@ -23,13 +23,26 @@ interface ErrorResponse {
   code?: string;
 }
 
+interface LoginResponse {
+  refresh: string;
+  access: string;
+  user: {
+    id: string;
+    email: string;
+    username: string;
+    is_active: boolean;
+    is_staff: boolean;
+  };
+}
+
+
 interface AuthStore {
   user: User | null;
   isAuthenticated: boolean;
   loading: boolean;
 
   sendLoginCode: (email: string) => Promise<void>;
-  verifyLoginCode: (email: string, code: string) => Promise<void>;
+  verifyLoginCode: (email: string, code: string) => Promise<LoginResponse>;
   logout: () => Promise<void>;
   setUser: (user: User) => void;
   fetchUser: () => Promise<void>;
@@ -76,12 +89,13 @@ export const useAuthStore = create<AuthStore>((set) => ({
   },
 
   // Step 2: Verify magic login code
-  verifyLoginCode: async (email, code) => {
+  verifyLoginCode: async (email: string, code: string): Promise<LoginResponse> => {
     set({ loading: true });
     try {
-      const res = await api.post('/accounts/verify-code/', { email, code });
+      const res = await api.post<LoginResponse>('/accounts/verify-code/', { email, code });
 
       const { access, refresh, user } = res.data;
+
       if (access && refresh) {
         setTokens(access, refresh);
       }
@@ -91,6 +105,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
       }
 
       toast.success('Logged in successfully!');
+      return res.data;
     } catch (err: unknown) {
       const error = err as AxiosError<ErrorResponse>;
       toast.error(error.response?.data?.code || 'Login failed');
@@ -99,6 +114,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
       set({ loading: false });
     }
   },
+
 
   logout: async () => {
     try {

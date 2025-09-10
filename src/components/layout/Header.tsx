@@ -34,8 +34,7 @@ export default function Header({ onMobileMenuToggle }: HeaderProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center text-sm">
           <div>📞 Support: {AppSettings.contact.phone}</div>
           <div className="flex space-x-4">
-            <Link href="/track-order" className="hover:text-gray-300">Track Order</Link>
-            <Link href="/help" className="hover:text-gray-300">Help</Link>
+            <Link href="/contact" className="hover:text-gray-300">contact</Link>
           </div>
         </div>
       </div>

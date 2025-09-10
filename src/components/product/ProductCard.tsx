@@ -169,12 +169,22 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
 
           <button
             onClick={() => addItem(product.id)}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 px-4 rounded-xl font-bold transition transform hover:scale-[1.02] hover:shadow-lg flex items-center justify-center gap-2"
-            aria-label={`Add ${product.name} to cart`}
+            disabled={!product.is_active}
+            className={`w-full py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition transform 
+                ${product.is_active
+                ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white hover:scale-[1.02] hover:shadow-lg"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
+            aria-label={
+              product.is_active
+                ? `Add ${product.name} to cart`
+                : `${product.name} is out of stock`
+            }
           >
             <ShoppingCart size={18} />
-            <span>Add to Cart</span>
+            <span>{product.is_active ? "Add to Cart" : "Out of Stock"}</span>
           </button>
+
         </div>
       </div>
     );

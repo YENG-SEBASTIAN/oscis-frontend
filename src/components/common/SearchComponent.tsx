@@ -3,17 +3,10 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import {
-  Search,
-  X,
-  Star,
-  ArrowRight,
-  Clock,
-  Tag
-} from 'lucide-react';
-import { useCategoryStore } from '@/store/useCategoryStore';
+import { Search, X, Star, ArrowRight, Clock, Tag } from 'lucide-react';
+import { useCategoryStore, Category } from '@/store/useCategoryStore';
 import { useProductStore } from '@/store/useProductStore';
-import type { CategoryInterface, ProductInterface, ProductImage } from '@/types/types';
+import { ProductInterface } from '@/types/types';
 
 interface SearchResult {
   id: string | number;
@@ -40,11 +33,11 @@ interface SearchComponentProps {
 export default function SearchComponent({
   isOpen = false,
   onClose,
-  placeholder = "Search products, categories...",
-  className = ""
+  placeholder = 'Search products, categories...',
+  className = '',
 }: SearchComponentProps) {
-  const { categories, isLoading: loadingCategory, fetchCategories } = useCategoryStore();
-  const { products, isLoading: loadingProducts, fetchProducts } = useProductStore();
+  const { categories, fetchCategories } = useCategoryStore();
+  const { products, fetchProducts } = useProductStore();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -57,64 +50,63 @@ export default function SearchComponent({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  // Load recent searches from localStorage
+  /** -------------------------------
+   * Load & Save Recent Searches
+   * ------------------------------- */
   useEffect(() => {
     try {
       const stored = localStorage.getItem('recentSearches');
       if (stored) setRecentSearches(JSON.parse(stored));
-    } catch (err) {
-      // ignore localStorage errors
+    } catch {
+      /* ignore */
     }
   }, []);
 
-  // Save recent searches when updated
   useEffect(() => {
     try {
       localStorage.setItem('recentSearches', JSON.stringify(recentSearches));
-    } catch (err) {
-      // ignore
+    } catch {
+      /* ignore */
     }
   }, [recentSearches]);
 
-  // Ensure we have some initial data (only fetch if store is empty)
+  /** -------------------------------
+   * Initial fetch
+   * ------------------------------- */
   useEffect(() => {
     if (categories.length === 0) fetchCategories();
     if (products.length === 0) fetchProducts();
   }, [categories.length, products.length, fetchCategories, fetchProducts]);
 
-  // Helper: map product -> SearchResult
-  const mapProduct = (p: ProductInterface): SearchResult => {
-    const image =
-      (p.primary_image as ProductImage | undefined)?.url || undefined;
+  /** -------------------------------
+   * Mapping Helpers
+   * ------------------------------- */
+  const mapProduct = (p: ProductInterface): SearchResult => ({
+    id: p.id,
+    name: p.name,
+    slug: p.slug,
+    description: p.description,
+    image: p.primary_image?.url ?? undefined,
+    badge: p.badge,
+    type: 'product',
+    price: p.price,
+    original_price: p.original_price,
+    rating: p.rating,
+    review_count: p.review_count,
+  });
 
-    return {
-      id: p.id,
-      name: p.name,
-      slug: p.slug,
-      description: p.description,
-      image,
-      badge: p.badge,
-      type: 'product',
-      price: p.price,
-      original_price: p.original_price,
-      rating: p.rating,
-      review_count: p.review_count
-    };
-  };
-
-  // Helper: map category -> SearchResult
-  const mapCategory = (c: CategoryInterface): SearchResult => ({
+  const mapCategory = (c: Category): SearchResult => ({
     id: c.id,
     name: c.name,
     slug: c.slug,
     description: c.description,
-    image: (c as any).image?.url ?? undefined,
-    badge: undefined,
+    image: c.image?.url ?? undefined,
     type: 'category',
-    count: undefined
   });
 
-  // Perform search (server-backed via store fetches), debounced by effect below
+  /** -------------------------------
+   * Perform Search
+   * ------------------------------- */
   const performSearch = async (query: string) => {
     const q = query.trim();
     if (!q) {
@@ -125,16 +117,12 @@ export default function SearchComponent({
     }
 
     setIsSearching(true);
-
     try {
-      // ask the stores to fetch server-side filtered data
-      // they update the store; we then read latest state synchronously
       await Promise.all([
         fetchProducts({ search: q }),
-        fetchCategories({ search: q })
+        fetchCategories({ search: q }),
       ]);
 
-      // read freshest state from stores (synchronously)
       const latestProducts = useProductStore.getState().products || [];
       const latestCategories = useCategoryStore.getState().categories || [];
 
@@ -142,23 +130,28 @@ export default function SearchComponent({
       const catResults = latestCategories.map(mapCategory);
 
       const combined = [...prodResults, ...catResults];
-
-      // sort by relevance: startsWith > includes, products before categories, product rating tiebreak
       const normalizedQuery = q.toLowerCase();
+
       const sorted = combined.sort((a, b) => {
         const aName = a.name.toLowerCase();
         const bName = b.name.toLowerCase();
 
-        const aScore = aName.startsWith(normalizedQuery) ? 2 : (aName.includes(normalizedQuery) ? 1 : 0);
-        const bScore = bName.startsWith(normalizedQuery) ? 2 : (bName.includes(normalizedQuery) ? 1 : 0);
+        const aScore = aName.startsWith(normalizedQuery)
+          ? 2
+          : aName.includes(normalizedQuery)
+          ? 1
+          : 0;
+        const bScore = bName.startsWith(normalizedQuery)
+          ? 2
+          : bName.includes(normalizedQuery)
+          ? 1
+          : 0;
 
         if (aScore !== bScore) return bScore - aScore;
-
-        if (a.type === 'product' && b.type === 'category') return -1;
-        if (a.type === 'category' && b.type === 'product') return 1;
+        if (a.type !== b.type) return a.type === 'product' ? -1 : 1;
 
         if (a.type === 'product' && b.type === 'product') {
-          return (b.rating || 0) - (a.rating || 0);
+          return (b.rating ?? 0) - (a.rating ?? 0);
         }
 
         return 0;
@@ -166,8 +159,7 @@ export default function SearchComponent({
 
       setSearchResults(sorted.slice(0, 10));
       setShowResults(true);
-    } catch (err) {
-      // On error, show nothing but stop searching
+    } catch {
       setSearchResults([]);
       setShowResults(true);
     } finally {
@@ -175,29 +167,32 @@ export default function SearchComponent({
     }
   };
 
-  // Debounce searchQuery changes
+  /** -------------------------------
+   * Debounced Search
+   * ------------------------------- */
   useEffect(() => {
     const handler = setTimeout(() => {
       performSearch(searchQuery);
     }, 300);
-
     return () => clearTimeout(handler);
-    // intentionally exclude performSearch from deps to avoid recreations; fetchProducts/fetchCategories are stable from store
-  }, [searchQuery, fetchProducts, fetchCategories]);
+  }, [searchQuery]);
 
-  // Click outside closes dropdown
+  /** -------------------------------
+   * UI Interactions
+   * ------------------------------- */
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target as Node)
+      ) {
         setShowResults(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Focus input when component opens
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
       searchInputRef.current.focus();
@@ -205,19 +200,18 @@ export default function SearchComponent({
     }
   }, [isOpen]);
 
-  // When user submits search (via Enter or clicking suggestion)
   const handleSearch = (query?: string) => {
     const finalQuery = (query ?? searchQuery).trim();
     if (!finalQuery) return;
 
-    // add to recent (no duplicates)
-    setRecentSearches(prev => {
-      const updated = [finalQuery, ...prev.filter(t => t !== finalQuery)].slice(0, 5);
-      try { localStorage.setItem('recentSearches', JSON.stringify(updated)); } catch (e) {}
+    setRecentSearches((prev) => {
+      const updated = [finalQuery, ...prev.filter((t) => t !== finalQuery)].slice(
+        0,
+        5
+      );
       return updated;
     });
 
-    // ensure searchQuery updated (this will trigger performSearch via effect)
     setSearchQuery(finalQuery);
   };
 
@@ -235,17 +229,18 @@ export default function SearchComponent({
     setShowResults(false);
   };
 
-  // Clicking a result: push recent searches & close (Link will still navigate)
   const onResultClick = (name: string) => {
-    setRecentSearches(prev => {
-      const updated = [name, ...prev.filter(t => t !== name)].slice(0, 5);
-      try { localStorage.setItem('recentSearches', JSON.stringify(updated)); } catch (e) {}
+    setRecentSearches((prev) => {
+      const updated = [name, ...prev.filter((t) => t !== name)].slice(0, 5);
       return updated;
     });
     setShowResults(false);
     onClose?.();
   };
 
+  /** -------------------------------
+   * Render
+   * ------------------------------- */
   return (
     <div ref={searchContainerRef} className={`relative ${className}`}>
       {/* Search Input */}
@@ -280,10 +275,10 @@ export default function SearchComponent({
         </div>
       </div>
 
-      {/* Search Results Dropdown */}
+      {/* Results */}
       {showResults && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 max-h-[80vh] overflow-hidden">
-          {/* Loading State */}
+          {/* Loading */}
           {isSearching && (
             <div className="p-6 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -291,10 +286,9 @@ export default function SearchComponent({
             </div>
           )}
 
-          {/* No Query State - Show suggestions */}
+          {/* No Query → Suggestions */}
           {!searchQuery.trim() && !isSearching && (
             <div className="p-6">
-              {/* Recent Searches */}
               {recentSearches.length > 0 && (
                 <div className="mb-6">
                   <div className="flex items-center space-x-2 mb-3">
@@ -317,7 +311,7 @@ export default function SearchComponent({
             </div>
           )}
 
-          {/* Search Results */}
+          {/* Results */}
           {searchQuery.trim() && !isSearching && (
             <div className="max-h-96 overflow-y-auto">
               {searchResults.length > 0 ? (
@@ -339,14 +333,16 @@ export default function SearchComponent({
                     {searchResults.map((result) => (
                       <Link
                         key={`${result.type}-${result.id}`}
-                        href={result.type === 'product' ? `/products/${result.id}` : `/category/${result.slug}`}
+                        href={
+                          result.type === 'product'
+                            ? `/products/${result.id}`
+                            : `/category/${result.slug}`
+                        }
                         className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors group"
                         onClick={() => onResultClick(result.name)}
                       >
-                        {/* Image */}
                         <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                           {result.image && (
-                            // `result.image` is a URL
                             <Image
                               src={result.image}
                               alt={result.name}
@@ -357,7 +353,6 @@ export default function SearchComponent({
                           )}
                         </div>
 
-                        {/* Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2">
                             <h4 className="font-medium text-gray-900 truncate group-hover:text-blue-600 transition-colors">
@@ -385,14 +380,18 @@ export default function SearchComponent({
                                 <span className="font-semibold text-gray-900">
                                   ${result.price?.toFixed(2)}
                                 </span>
-                                {result.original_price && result.original_price > (result.price || 0) && (
-                                  <span className="text-sm text-gray-400 line-through">
-                                    ${result.original_price.toFixed(2)}
-                                  </span>
-                                )}
+                                {result.original_price &&
+                                  result.original_price > (result.price || 0) && (
+                                    <span className="text-sm text-gray-400 line-through">
+                                      ${result.original_price.toFixed(2)}
+                                    </span>
+                                  )}
                                 {result.rating !== undefined && (
                                   <div className="flex items-center space-x-1">
-                                    <Star size={12} className="text-yellow-400 fill-current" />
+                                    <Star
+                                      size={12}
+                                      className="text-yellow-400 fill-current"
+                                    />
                                     <span className="text-xs text-gray-500">
                                       {result.rating} ({result.review_count ?? 0})
                                     </span>
@@ -410,7 +409,10 @@ export default function SearchComponent({
                           </div>
                         </div>
 
-                        <ArrowRight size={16} className="text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <ArrowRight
+                          size={16}
+                          className="text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                        />
                       </Link>
                     ))}
                   </div>
