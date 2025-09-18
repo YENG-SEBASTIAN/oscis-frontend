@@ -95,7 +95,7 @@ export default function CategoryDetailPage() {
         <section className="mb-6 sm:mb-8">
           <Link
             href="/category"
-            className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors duration-200 group"
+            className="inline-flex items-center text-sm font-medium text-gray-600 hover:text-blue-700 transition-colors duration-200 group"
           >
             <ChevronLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform duration-200" />
             Back to all categories
@@ -151,7 +151,7 @@ export default function CategoryDetailPage() {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="border border-blue-300 text-blue-400 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="border border-black text-black rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:border-transparent"
                   >
                     <option value="name">Sort by Name</option>
                     <option value="price-low">Price: Low to High</option>
@@ -166,7 +166,7 @@ export default function CategoryDetailPage() {
                     onClick={() => setViewMode('grid')}
                     className={`p-2 rounded-md transition-all duration-200 ${
                       viewMode === 'grid'
-                        ? 'bg-white text-blue-600 shadow-sm'
+                        ? 'bg-white text-gray-600 shadow-sm'
                         : 'text-gray-400 hover:text-gray-600'
                     }`}
                   >
@@ -176,7 +176,7 @@ export default function CategoryDetailPage() {
                     onClick={() => setViewMode('list')}
                     className={`p-2 rounded-md transition-all duration-200 ${
                       viewMode === 'list'
-                        ? 'bg-white text-blue-600 shadow-sm'
+                        ? 'bg-white text-gray-600 shadow-sm'
                         : 'text-gray-400 hover:text-gray-600'
                     }`}
                   >

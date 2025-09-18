@@ -204,19 +204,19 @@ export default function ProductDetailPage({ params }: ProductParams) {
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
 
                 {/* Rating */}
-                <div className="flex items-center space-x-2 mb-4">
+                {/* <div className="flex items-center space-x-2 mb-4">
                   <div className="flex items-center space-x-1">
                     <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                     <span className="font-semibold text-gray-900">{product.rating}</span>
                   </div>
                   <span className="text-gray-500 text-sm">({product.review_count} reviews)</span>
-                </div>
+                </div> */}
               </div>
 
               {/* Pricing */}
               <div className="bg-gray-50 rounded-xl p-6">
                 <div className="flex items-center space-x-3 mb-3">
-                  <span className="text-4xl font-bold text-blue-600">{AppSettings.currency}{price.toFixed(2)}</span>
+                  <span className="text-4xl font-bold text-black">{AppSettings.currency}{price.toFixed(2)}</span>
                   {originalPrice && (
                     <span className="line-through text-gray-400 text-xl">
                       {AppSettings.currency}{originalPrice.toFixed(2)}
@@ -345,15 +345,15 @@ export default function ProductDetailPage({ params }: ProductParams) {
                           {product.category && (
                             <p className="text-xs text-gray-500 mb-2">{product.category.name}</p>
                           )}
-                          <div className="flex items-center space-x-1 mb-2">
+                          {/* <div className="flex items-center space-x-1 mb-2">
                             <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                             <span className="text-xs text-gray-600">{product.rating}</span>
                             {product.review_count && (
                               <span className="text-xs text-gray-400">({product.review_count})</span>
                             )}
-                          </div>
+                          </div> */}
                           <div className="flex items-center space-x-2">
-                            <span className="font-bold text-blue-600">{AppSettings.currency}{product.price.toFixed(2)}</span>
+                            <span className="font-bold text-black">{AppSettings.currency}{product.price.toFixed(2)}</span>
                             {product.original_price && (
                               <span className="line-through text-gray-400 text-sm">
                                 {AppSettings.currency}{product.original_price.toFixed(2)}

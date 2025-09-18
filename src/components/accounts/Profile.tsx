@@ -98,7 +98,7 @@ export default function Profile() {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       {/* Profile Display */}
-      <div className="p-6 border rounded-xl bg-white shadow-sm text-blue-700 border-blue-300 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <div className="p-6 border rounded-xl bg-white shadow-sm text-black border-black flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="flex gap-6 items-center w-full md:w-auto">
           <div className="h-24 w-24 rounded-full bg-blue-100 overflow-hidden">
             {preview ? (
@@ -109,10 +109,10 @@ export default function Profile() {
           </div>
           <div>
             <h3 className="text-xl font-semibold">@{user.username}</h3>
-            <p className="text-sm text-blue-500">{profile?.location}</p>
+            <p className="text-sm text-black">{profile?.location}</p>
           </div>
         </div>
-        <div className="text-sm italic text-right text-blue-500 w-full md:w-1/2">
+        <div className="text-sm italic text-right text-black w-full md:w-1/2">
           {profile?.bio}
         </div>
       </div>
@@ -121,7 +121,7 @@ export default function Profile() {
       <div className="flex gap-4 justify-end">
         <button
           onClick={() => setEditMode(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500"
+          className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-700 focus:ring-2"
         >
           Update Profile
         </button>
@@ -131,25 +131,25 @@ export default function Profile() {
       {editMode && (
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="space-y-6 p-6 border border-blue-200 rounded-xl bg-blue-50"
+          className="space-y-6 p-6 border border-black rounded-xl bg-blue-50"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Username */}
             <div>
-              <label className="block text-sm font-medium text-blue-600 mb-1">Username</label>
+              <label className="block text-sm font-medium text-black mb-1">Username</label>
               <input
                 {...register('username')}
-                className="w-full px-3 py-2 border border-blue-300 rounded-md focus:ring-blue-500 focus:outline-none text-blue-700"
+                className="w-full px-3 py-2 border border-black rounded-md focus:outline-none text-black"
               />
               {errors.username && <p className="text-sm text-red-500 mt-1">{errors.username.message}</p>}
             </div>
 
             {/* Gender */}
             <div>
-              <label className="block text-sm font-medium text-blue-600 mb-1">Gender</label>
+              <label className="block text-sm font-medium text-black mb-1">Gender</label>
               <select
                 {...register('gender')}
-                className="w-full px-3 py-2 border border-blue-300 rounded-md focus:ring-blue-500 focus:outline-none text-blue-700"
+                className="w-full px-3 py-2 border border-black rounded-md focus:outline-none text-black"
               >
                 <option value="">Select Gender</option>
                 <option value="Male">Male</option>
@@ -160,40 +160,40 @@ export default function Profile() {
 
             {/* Date of Birth */}
             <div>
-              <label className="block text-sm font-medium text-blue-600 mb-1">Date of Birth</label>
+              <label className="block text-sm font-medium text-black mb-1">Date of Birth</label>
               <input
                 type="date"
                 {...register('date_of_birth')}
-                className="w-full px-3 py-2 border border-blue-300 rounded-md focus:ring-blue-500 focus:outline-none text-blue-700"
+                className="w-full px-3 py-2 border border-black rounded-md focus:outline-none text-black"
               />
             </div>
 
             {/* Bio */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-blue-600 mb-1">Bio</label>
+              <label className="block text-sm font-medium text-black mb-1">Bio</label>
               <textarea
                 {...register('bio')}
-                className="w-full px-3 py-2 border border-blue-300 rounded-md focus:ring-blue-500 focus:outline-none text-blue-700"
+                className="w-full px-3 py-2 border border-black rounded-md focus:outline-none text-black"
               />
             </div>
 
             {/* Location */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-blue-600 mb-1">Location</label>
+              <label className="block text-sm font-medium text-black mb-1">Location</label>
               <input
                 {...register('location')}
-                className="w-full px-3 py-2 border border-blue-300 rounded-md focus:ring-blue-500 focus:outline-none text-blue-700"
+                className="w-full px-3 py-2 border border-black rounded-md focus:outline-none text-black"
               />
             </div>
 
             {/* Avatar */}
             <div>
-              <label className="block text-sm font-medium text-blue-600 mb-1">Avatar</label>
+              <label className="block text-sm font-medium text-black mb-1">Avatar</label>
               <input
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
-                className="text-sm text-blue-500"
+                className="text-sm text-black"
               />
             </div>
           </div>
@@ -201,14 +201,14 @@ export default function Profile() {
           <div className="flex gap-4 pt-4 justify-end">
             <button
               type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500"
+              className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-700 focus:ring-2"
             >
               Save Changes
             </button>
             <button
               type="button"
               onClick={() => setEditMode(false)}
-              className="px-4 py-2 border border-blue-400 text-blue-600 rounded-md hover:bg-blue-50"
+              className="px-4 py-2 border border-black text-black rounded-md hover:bg-gray-50"
             >
               Cancel
             </button>

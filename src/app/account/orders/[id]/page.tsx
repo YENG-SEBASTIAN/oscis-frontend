@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useOrderStore } from '@/store/useOrderStore';
 import ConfirmDeleteModal from '@/components/ui/ConfirmDeleteModal';
+import AuthGuard from '@/components/auth/AuthGuard';
 
 const statusSteps = [
   { key: 'Pending', label: 'Pending', icon: <Clock className="w-5 h-5" /> },
@@ -95,6 +96,7 @@ export default function OrderDetailPage() {
   };
 
   return (
+    <AuthGuard>
     <div className="max-w-5xl mx-auto px-4 py-10 space-y-8">
       {/* Header */}
       <div className="bg-white rounded-xl shadow p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border border-gray-200">
@@ -172,7 +174,7 @@ export default function OrderDetailPage() {
 
       {/* Order Items */}
       <div className="bg-white rounded-xl shadow p-6 border border-gray-200">
-        <h3 className="text-lg font-bold mb-4 text-black">Items ({order.items.length})</h3>
+        <h3 className="text-lg font-bold mb-4 text-black">Items ({order.items.reduce((total, item) => total + item.quantity, 0)})</h3>
         <div className="space-y-4">
           {order.items.map((item) => (
             <div key={item.id} className="flex gap-4 p-4 border rounded-lg">
@@ -289,5 +291,6 @@ export default function OrderDetailPage() {
         </div>
       </div>
     </div>
+    </AuthGuard>
   );
 }
