@@ -39,20 +39,20 @@ export default function AddressSelector({ onAddressChange }: Props) {
             <button
               key={addr.id}
               onClick={() => handleSelectExisting(addr.id)}
-              className={`w-full text-left border rounded-lg p-4 transition ${selectedAddress === addr.id ? 'border-blue-500 bg-blue-50' : 'border-blue-300 hover:border-blue-400'}`}
+              className={`w-full text-left border rounded-lg p-4 transition ${selectedAddress === addr.id ? 'border-green-500 bg-green-50 ring-2 ring-green-200' : 'border-black hover:border-blue-400'}`}
             >
               <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-blue-600 mt-1 flex-shrink-0" />
+                <MapPin className="w-5 h-5 text-black mt-1 flex-shrink-0" />
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-blue-600">{addr.first_name} {addr.last_name}</p>
-                  <p className="text-sm text-blue-500">{addr.address_line}, {addr.city}, {addr.postal_code}</p>
-                  <p className="text-sm text-blue-500">{addr.phone_number}</p>
+                  <p className="font-medium text-black">{addr.first_name} {addr.last_name}</p>
+                  <p className="text-sm text-black">{addr.address_line}, {addr.city}, {addr.postal_code}</p>
+                  <p className="text-sm text-black">{addr.phone_number}</p>
                 </div>
-                {selectedAddress === addr.id && <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">Selected</span>}
+                {selectedAddress === addr.id && <span className="text-xs bg-green-600 text-white px-2 py-1 rounded">Selected</span>}
               </div>
             </button>
           ))}
-          <button onClick={handleShowNewForm} className="w-full text-left border-2 border-dashed border-blue-300 rounded-lg p-4 text-blue-600 hover:border-blue-400 hover:text-blue-700 transition">
+          <button onClick={handleShowNewForm} className="w-full text-left border-2 border-dashed border-blue-300 rounded-lg p-4 text-black hover:border-blue-400 hover:text-blue-700 transition">
             + Add a new address
           </button>
         </div>
@@ -63,7 +63,7 @@ export default function AddressSelector({ onAddressChange }: Props) {
         <div>
           <CheckoutAddress onFormChange={handleNewAddressChange} />
           {addresses.length > 0 && (
-            <button onClick={() => setShowNewAddressForm(false)} className="mt-3 text-sm text-blue-600 hover:text-blue-800">
+            <button onClick={() => setShowNewAddressForm(false)} className="mt-3 text-sm text-black hover:text-blue-800">
               ← Back to saved addresses
             </button>
           )}

@@ -129,7 +129,7 @@ export default function CheckoutPage() {
         <div className="lg:col-span-2 space-y-8">
           {/* Step 1: Address */}
           <section>
-            <h2 className="text-2xl font-semibold text-blue-600 mb-4">1. Delivery Address</h2>
+            <h2 className="text-2xl font-semibold text-black mb-4">1. Delivery Address</h2>
             <AddressSelector onAddressChange={handleAddressChange} />
           </section>
 

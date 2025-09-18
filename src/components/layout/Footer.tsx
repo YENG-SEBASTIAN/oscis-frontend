@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin, CreditCard, Shield, Truck, RefreshCw } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin, CreditCard, Smartphone, Wallet, Shield, Truck, RefreshCw } from 'lucide-react';
 import { AppSettings } from '@/settings/settings';
 
 export default function Footer() {
@@ -60,7 +60,7 @@ export default function Footer() {
                   Contact Us
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link href="/careers" className="text-gray-400 hover:text-white transition-colors">
                   Careers
                 </Link>
@@ -74,7 +74,7 @@ export default function Footer() {
                 <Link href="/press" className="text-gray-400 hover:text-white transition-colors">
                   Press
                 </Link>
-              </li>
+              </li> */}
             </ul>
           </div>
 
@@ -88,22 +88,22 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/shipping" className="text-gray-400 hover:text-white transition-colors">
+                <Link href="/help/shipping" className="text-gray-400 hover:text-white transition-colors">
                   Shipping Policy
                 </Link>
               </li>
               <li>
-                <Link href="/returns" className="text-gray-400 hover:text-white transition-colors">
+                <Link href="/help/returns" className="text-gray-400 hover:text-white transition-colors">
                   Returns & Exchanges
                 </Link>
               </li>
               <li>
-                <Link href="/size-guide" className="text-gray-400 hover:text-white transition-colors">
+                <Link href="/help/size-guide" className="text-gray-400 hover:text-white transition-colors">
                   Size Guide
                 </Link>
               </li>
               <li>
-                <Link href="/track-order" className="text-gray-400 hover:text-white transition-colors">
+                <Link href="/account/orders" className="text-gray-400 hover:text-white transition-colors">
                   Track Your Order
                 </Link>
               </li>
@@ -113,12 +113,12 @@ export default function Footer() {
           {/* Newsletter */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Stay Connected</h3>
-            <p className="text-gray-400 mb-4">
+            {/* <p className="text-gray-400 mb-4">
               Subscribe to get special offers, updates and more.
-            </p>
+            </p> */}
 
             {/* Newsletter Form */}
-            <div className="mb-6">
+            {/* <div className="mb-6">
               <div className="flex">
                 <input
                   type="email"
@@ -132,11 +132,11 @@ export default function Footer() {
               <p className="text-xs text-gray-500 mt-2">
                 By subscribing, you agree to our Privacy Policy
               </p>
-            </div>
+            </div> */}
 
             {/* Social Links */}
             <div>
-              <p className="text-sm font-medium mb-3">Follow Us</p>
+              {/* <p className="text-sm font-medium mb-3">Follow Us</p> */}
               <div className="flex space-x-4">
                 <a href={AppSettings.socialLinks.facebook} className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors">
                   <Facebook size={20} />
@@ -172,20 +172,45 @@ export default function Footer() {
             {/* Payment Methods */}
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-400">We Accept:</span>
-              <div className="flex items-center space-x-2">
+
+              <div className="flex items-center space-x-3">
+                {/* Visa */}
                 <div
-                  className="w-10 h-6 bg-blue-600 rounded flex items-center justify-center"
+                  className="w-14 h-8 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-semibold"
                   title={AppSettings.paymentMethods.visa}
                 >
-                  <CreditCard size={14} className="text-white" />
+                  <CreditCard size={14} className="mr-1" />
+                  Visa
                 </div>
+
+                {/* Mastercard */}
                 <div
-                  className="w-10 h-6 bg-red-600 rounded flex items-center justify-center"
+                  className="w-20 h-8 bg-red-600 rounded flex items-center justify-center text-white text-xs font-semibold"
                   title={AppSettings.paymentMethods.mastercard}
                 >
-                  <CreditCard size={14} className="text-white" />
+                  <CreditCard size={14} className="mr-1" />
+                  Mastercard
+                </div>
+
+                {/* Apple Pay */}
+                <div
+                  className="w-24 h-8 bg-black rounded flex items-center justify-center text-white text-xs font-semibold"
+                  title={AppSettings.paymentMethods.applePay}
+                >
+                  <Smartphone size={14} className="mr-1" />
+                  Apple Pay
+                </div>
+
+                {/* Google Pay */}
+                <div
+                  className="w-28 h-8 bg-gray-800 rounded flex items-center justify-center text-white text-xs font-semibold"
+                  title={AppSettings.paymentMethods.googlePay}
+                >
+                  <Smartphone size={14} className="mr-1" />
+                  Google Pay
                 </div>
               </div>
+
             </div>
 
           </div>

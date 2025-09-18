@@ -24,14 +24,11 @@ export default function CartSummary({
         <span>Subtotal ({totalItems} items)</span>
         <span>{AppSettings.currency}{total.toFixed(2)}</span>
       </div>
-      <p className="text-sm text-gray-500 mb-6">
-        Shipping and taxes calculated at checkout.
-      </p>
 
       <button
         onClick={onCheckout}
         disabled={isLoading}
-        className="w-full flex items-center justify-center gap-2 py-3 px-6 text-white font-semibold bg-blue-600 hover:bg-blue-700 transition rounded-lg disabled:opacity-50"
+        className="w-full flex items-center justify-center gap-2 py-3 px-6 text-white font-semibold bg-black hover:bg-gray-700 transition rounded-lg disabled:opacity-50"
       >
         {isLoading ? (
           <>

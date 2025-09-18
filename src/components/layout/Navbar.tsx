@@ -33,7 +33,7 @@ export default function Navbar() {
           {/* Categories Dropdown */}
           <div className="relative">
             <button
-              className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm sm:text-base"
+              className="flex items-center space-x-2 bg-black text-white px-3 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm sm:text-base"
               onClick={() => handleDropdownToggle('categories')}
               onMouseEnter={() => setActiveDropdown('categories')}
               onMouseLeave={() => setActiveDropdown(null)}
@@ -112,7 +112,7 @@ export default function Navbar() {
                     </div>
                     <Link
                       href="/products"
-                      className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center space-x-2 text-sm sm:text-base w-full sm:w-auto justify-center"
+                      className="bg-black text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center space-x-2 text-sm sm:text-base w-full sm:w-auto justify-center"
                     >
                       <span>View All Products</span>
                       <ArrowRight size={14} className="sm:w-4 sm:h-4" />

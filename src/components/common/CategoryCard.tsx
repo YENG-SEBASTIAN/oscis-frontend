@@ -30,7 +30,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ name, image, onClick }) => 
       </div>
 
       <div className="p-4">
-        <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl font-medium transition-all duration-300 transform group-hover:scale-105">
+        <button className="w-full bg-black hover:bg-gray-700 text-white py-2 rounded-xl font-medium transition-all duration-300 transform group-hover:scale-105">
           Explore {name}
         </button>
       </div>

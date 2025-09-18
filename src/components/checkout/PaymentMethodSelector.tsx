@@ -47,7 +47,7 @@ export default function PaymentMethodSelector({ hasValidAddress, onCheckout }: P
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <h2 className="text-2xl font-semibold text-blue-600">2. Payment Method</h2>
+        <h2 className="text-2xl font-semibold text-black">2. Payment Method</h2>
         {hasValidAddress && (
           <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Address Complete ✓</span>
         )}
@@ -70,13 +70,13 @@ export default function PaymentMethodSelector({ hasValidAddress, onCheckout }: P
               }}
               className={`w-full border rounded-xl p-6 cursor-pointer transition hover:shadow-md relative ${selectedMethod === key
                 ? "border-green-500 bg-green-50 ring-2 ring-green-200"
-                : "border-blue-300 bg-white"
+                : "border-black bg-white"
                 }`}
             >
               <div className="flex items-center gap-4">
                 {icon}
                 <div className="flex-1">
-                  <h3 className="font-medium text-blue-600">{label}</h3>
+                  <h3 className="font-medium text-black">{label}</h3>
                 </div>
                 {selectedMethod === key && (
                   <span className="absolute top-3 right-3 text-xs bg-green-600 text-white px-2 py-1 rounded-full font-medium">
@@ -94,7 +94,7 @@ export default function PaymentMethodSelector({ hasValidAddress, onCheckout }: P
           <button
             onClick={() => handleProceed(selectedMethod)}
             disabled={isLoading}
-            className="w-full py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition shadow-md bg-blue-600 hover:bg-blue-700 text-white disabled:bg-blue-400"
+            className="w-full py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition shadow-md bg-black hover:bg-gray-700 text-white disabled:bg-blue-400"
           >
             {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
             {isLoading ? "Setting up payment..." : `Proceed with payment`}

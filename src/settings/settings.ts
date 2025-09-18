@@ -31,6 +31,8 @@ export const AppSettings = {
     paymentMethods: {
     visa: 'Visa',
     mastercard: 'MasterCard',
+    applePay: 'Apple Pay',
+    googlePay: 'Google Pay',
   },
   currency: '£'
 };

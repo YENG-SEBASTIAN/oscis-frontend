@@ -32,19 +32,20 @@ export default function AddressList() {
   };
 
   const handleDeleteConfirm = async () => {
-    if (deleteId) {
-      try {
-        await deleteAddress(deleteId);
-        setDeleteId(null);
-      } catch {
-        toast.error("Failed to delete address");
-      }
+    if (!deleteId) return;
+    try {
+      await deleteAddress(deleteId);
+      toast.success("Address deleted");
+      setDeleteId(null);
+    } catch {
+      toast.error("Failed to delete address");
     }
   };
 
   const handleSetDefault = async (id: string) => {
     try {
       await setDefaultAddress(id);
+      toast.success("Default address updated");
     } catch {
       toast.error("Failed to update default address");
     }
@@ -53,15 +54,15 @@ export default function AddressList() {
   return (
     <div className="max-w-3xl mx-auto">
       <ConfirmDeleteModal
-        isOpen={deleteId !== null}
+        isOpen={!!deleteId}
         onClose={() => setDeleteId(null)}
         onConfirm={handleDeleteConfirm}
       />
 
       <div className="space-y-6">
-        {/* Address List */}
+        {/* Header */}
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-blue-400">Your Addresses</h2>
+          <h2 className="text-xl font-semibold text-black">Your Addresses</h2>
           <button
             onClick={() => {
               setEditingId(null);
@@ -71,15 +72,14 @@ export default function AddressList() {
             className={`flex items-center px-3 py-2 rounded-md text-sm transition
               ${formOpen
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-black text-white hover:bg-gray-700"
               }`}
           >
             <Plus className="h-4 w-4 mr-1" /> Add New Address
           </button>
-
         </div>
 
-
+        {/* Address List */}
         {loading ? (
           <div className="text-gray-600">Loading addresses...</div>
         ) : addresses.length === 0 ? (
@@ -90,7 +90,7 @@ export default function AddressList() {
               <div
                 key={address.id}
                 className={`border rounded-lg p-4 transition ${address.is_default
-                  ? "border-blue-600 bg-blue-50"
+                  ? "border-black bg-blue-50"
                   : "border-gray-200"
                   }`}
               >
@@ -122,10 +122,11 @@ export default function AddressList() {
                     </button>
                   </div>
                 </div>
+
                 {!address.is_default && (
                   <button
                     onClick={() => handleSetDefault(address.id)}
-                    className="mt-2 text-sm text-blue-600 hover:underline"
+                    className="mt-2 text-sm text-black hover:underline"
                   >
                     Set as default
                   </button>
@@ -135,7 +136,7 @@ export default function AddressList() {
           </div>
         )}
 
-
+        {/* Address Form */}
         {formOpen && (
           <AddressForm
             defaultValues={
@@ -145,10 +146,13 @@ export default function AddressList() {
               setEditingId(null);
               setFormOpen(false);
             }}
+            onSuccess={() => {
+              setEditingId(null);
+              setFormOpen(false);
+              // the store already refetches after mutations; you can optionally call fetchAddresses() here
+            }}
           />
         )}
-
-
       </div>
     </div>
   );

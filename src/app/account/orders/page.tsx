@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useOrderStore } from '@/store/useOrderStore';
 import { AppSettings } from '@/settings/settings';
+import AuthGuard from "@/components/auth/AuthGuard";
 
 // ---------- Helpers ----------
 const getStatusDetails = (status: string) => {
@@ -61,6 +62,7 @@ export default function OrdersPage() {
   }, [fetchOrders]);
 
   return (
+    <AuthGuard>
     <main className="max-w-4xl mx-auto px-4 py-10 sm:px-6 lg:px-8">
       {/* Header */}
       <header className="mb-8">
@@ -169,5 +171,6 @@ export default function OrdersPage() {
         })}
       </section>
     </main>
+    </AuthGuard>
   );
 }

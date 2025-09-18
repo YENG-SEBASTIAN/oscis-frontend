@@ -100,7 +100,7 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
 
           {product.badge && (
             <div className="absolute top-4 left-4">
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1 rounded-full text-xs font-bold">
+              <span className="bg-gray-700 text-white px-3 py-1 rounded-full text-xs font-bold">
                 {product.badge}
               </span>
             </div>
@@ -172,7 +172,7 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
             disabled={!product.is_active}
             className={`w-full py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition transform 
                 ${product.is_active
-                ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white hover:scale-[1.02] hover:shadow-lg"
+                ? "bg-black hover:bg-gray-700 text-white hover:scale-[1.02] hover:shadow-lg"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
             aria-label={

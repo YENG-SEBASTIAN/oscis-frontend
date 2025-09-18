@@ -87,7 +87,7 @@ export const useAddressStore = create<AddressStore>()(
         updateAddress: async (id, data) => {
             set({ loading: true });
             try {
-                await ApiService.put(`/address/${id}/`, data);
+                await ApiService.patch(`/address/${id}/`, data);
                 toast.success('Address updated');
                 await Promise.all([
                     useAddressStore.getState().fetchAddresses(),
