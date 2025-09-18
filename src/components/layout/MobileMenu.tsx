@@ -51,7 +51,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">S</span>
+                <img src="/logo.jpg" alt="Logo" className="w-6 h-6 object-contain" />
               </div>
               <div>
                 <h2 className="font-bold text-gray-900">{AppSettings.name}</h2>
@@ -62,7 +62,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
               onClick={onClose}
               className="p-2 rounded-full hover:bg-gray-100 transition-colors"
             >
-              <X size={20} />
+              <X size={20} className='text-red-700'/>
             </button>
           </div>
 
@@ -87,13 +87,13 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                 >
                   Sign In
                 </Link>
-                <Link
+                {/* <Link
                   href="/register"
                   onClick={onClose}
                   className="block w-full border border-gray-300 text-gray-700 text-center py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors"
                 >
                   Create Account
-                </Link>
+                </Link> */}
               </div>
             )}
           </div>
@@ -147,40 +147,14 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                   >
                     <span className="font-medium text-gray-900">Home</span>
                   </Link>
-
-                  <button
-                    onClick={() => setActiveSection(activeSection === 'categories' ? null : 'categories')}
-                    className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-100 transition-colors"
+                  <Link
+                    href="/category"
+                    onClick={onClose}
+                    className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition-colors"
                   >
-                    <span className="font-medium text-gray-900">Categories</span>
-                    <ChevronRight
-                      size={16}
-                      className={`transform transition-transform ${activeSection === 'categories' ? 'rotate-90' : ''
-                        }`}
-                    />
-                  </button>
+                    <span className="font-medium text-gray-900">Category</span>
+                  </Link>
 
-                  {activeSection === 'categories' && (
-                    <div className="ml-4 space-y-1">
-                      {categories.map((category) => {
-                        const IconComponent = category.icon;
-                        return (
-                          <Link
-                            key={category.name}
-                            href={`/category/${category.name.toLowerCase()}`}
-                            onClick={onClose}
-                            className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                          >
-                            <div className="flex items-center space-x-3">
-                              <IconComponent size={18} className="text-gray-500" />
-                              <span className="text-gray-700">{category.name}</span>
-                            </div>
-                            <span className="text-xs text-gray-500">{category.count}</span>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
 
                   {/* <Link
                     href="/products"
@@ -191,11 +165,11 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                   </Link> */}
 
                   <Link
-                    href="/brands"
+                    href="/products"
                     onClick={onClose}
                     className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition-colors"
                   >
-                    <span className="font-medium text-gray-900">Brands</span>
+                    <span className="font-medium text-gray-900">Products</span>
                   </Link>
                 </nav>
               </div>
@@ -245,7 +219,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
           {/* Footer */}
           <div className="border-t border-gray-200 p-4">
             <div className="flex items-center justify-center space-x-4 text-sm text-gray-500">
-              <Link href="/terms" onClick={onClose} className="hover:text-gray-900">
+              <Link href="" onClick={onClose} className="hover:text-gray-900">
                 Terms
               </Link>
               <span>•</span>

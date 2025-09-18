@@ -94,6 +94,7 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = '/placeholder-product.jpg';
                 }}
+                onClick={() => handleClick()}
               />
             )}
           </div>
@@ -142,12 +143,12 @@ const ProductCard = React.forwardRef<HTMLDivElement, ProductCardProps>(
             {product.name}
           </h3>
 
-          <div className="flex items-center mb-4">
+          {/* <div className="flex items-center mb-4">
             <StarRating rating={product.rating} />
             <span className="text-sm text-gray-500 ml-2 font-medium">
               ({product.review_count} reviews)
             </span>
-          </div>
+          </div> */}
 
           <div className="flex items-center justify-between mb-6 mt-auto">
             <div className="flex items-center gap-2">
