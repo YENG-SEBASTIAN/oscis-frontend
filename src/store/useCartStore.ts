@@ -112,10 +112,10 @@ export const useCartStore = create<CartState>()(
           setLoading(true);
           setError(null);
 
-          const productExists = items.some(item => item.productId === productId);
-          if (productExists) {
-            toast.success('This product is already in your cart. The quantity will be updated');
-          }
+          // const productExists = items.some(item => item.productId === productId);
+          // if (productExists) {
+          //   toast.success('This product is already in your cart. The quantity will be updated');
+          // }
 
           await ApiService.post('/cart/add/', { product: productId, quantity });
           await fetchCart();
