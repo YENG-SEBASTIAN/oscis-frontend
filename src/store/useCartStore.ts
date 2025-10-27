@@ -123,7 +123,7 @@ export const useCartStore = create<CartState>()(
         } catch (error: any) {
           console.error('Error adding item:', error);
           setError('Failed to add item');
-          toast.error(error.response?.data?.error || 'Failed to add item');
+          toast.error(error.response?.data?.quantity || 'Failed to add item');
         } finally {
           setLoading(false);
         }
@@ -162,7 +162,7 @@ export const useCartStore = create<CartState>()(
           console.error('Error updating quantity:', error);
           setError('Failed to update quantity');
           set({ isLoading: false });
-          toast.error(error.response?.data?.error || 'Failed to update quantity');
+          toast.error(error.response?.data?.quantity || 'Failed to update quantity');
         }
       },
 
