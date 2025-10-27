@@ -26,6 +26,9 @@ export const metadata: Metadata = {
   title: AppSettings.name,
   description: AppSettings.description,
   keywords: "ecommerce, shopping, premium products, online store, fashion, electronics",
+  icons: {
+    icon: '/logo.jpg',
+  },
   authors: [{ name: "Yeng Sebastian" }],
 };
 

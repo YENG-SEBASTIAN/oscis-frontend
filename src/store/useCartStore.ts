@@ -112,10 +112,10 @@ export const useCartStore = create<CartState>()(
           setLoading(true);
           setError(null);
 
-          const productExists = items.some(item => item.productId === productId);
-          if (productExists) {
-            toast.success('This product is already in your cart. The quantity will be updated');
-          }
+          // const productExists = items.some(item => item.productId === productId);
+          // if (productExists) {
+          //   toast.success('This product is already in your cart. The quantity will be updated');
+          // }
 
           await ApiService.post('/cart/add/', { product: productId, quantity });
           await fetchCart();
@@ -123,7 +123,7 @@ export const useCartStore = create<CartState>()(
         } catch (error: any) {
           console.error('Error adding item:', error);
           setError('Failed to add item');
-          toast.error(error.response?.data?.error || 'Failed to add item');
+          toast.error(error.response?.data?.quantity || 'Failed to add item');
         } finally {
           setLoading(false);
         }
@@ -162,7 +162,7 @@ export const useCartStore = create<CartState>()(
           console.error('Error updating quantity:', error);
           setError('Failed to update quantity');
           set({ isLoading: false });
-          toast.error(error.response?.data?.error || 'Failed to update quantity');
+          toast.error(error.response?.data?.quantity || 'Failed to update quantity');
         }
       },
 
